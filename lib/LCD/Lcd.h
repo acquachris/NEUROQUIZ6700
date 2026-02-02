@@ -10,11 +10,13 @@ class Lcd {
         Lcd();
 
         void Init();
-        LiquidCrystal_I2C GetInstance();
+        LiquidCrystal_I2C& GetInstance();
 
         void Clear();
         void Write(const char* text);
         void WriteLine(const char* text, int line);
         void FillLine(int line, char character);
         void WriteCentered(const char* line1, const char* line2);
+        void ClearLine(int line);
+        void SafeWrite(const char* text, bool allowWordSplit = false);
 };

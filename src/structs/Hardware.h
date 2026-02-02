@@ -6,6 +6,8 @@
 #include "RGBLed.h"
 #include "ThreePositionSwitch.h"
 #include "Keypad.h"
+#include "MFRC522.h"
+#include "Button.h"
 
 namespace Hardware {
     struct Hardware {
@@ -13,6 +15,13 @@ namespace Hardware {
         Buzzer& buzzer;
         Keypad& keypad;
         ThreePositionSwitch& menuSwitch;
+
+        Button& buttonAAnswer;
+        Button& buttonBAnswer;
+        Button& buttonCAnswer;
+        Button& buttonDAnswer;
+        Button& buttonLeft;
+        Button& buttonRight;
 
         Led& ledGreenA;
         Led& ledRedA;
@@ -25,5 +34,7 @@ namespace Hardware {
 
         RGBLed& rgbLedKeypad;
         RGBLed& rgbLedRfid;
+
+        MFRC522 rfidSensor;
     };
 }

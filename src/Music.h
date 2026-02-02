@@ -6,4 +6,10 @@ namespace Music {
     const int WrongMusic[]   = {NOTE_C5, NOTE_FS4, NOTE_DS4, NOTE_C4};
 
     const int Beep[] = {NOTE_A5};
+
+    const int RFIDMusic[] = {
+        NOTE_E5, NOTE_G5, NOTE_A5,
+        NOTE_E6,
+        NOTE_A5, NOTE_G5
+    };
 }

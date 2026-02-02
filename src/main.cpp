@@ -7,11 +7,15 @@
 #include "Pins.h"
 #include "Music.h"
 #include "Keypad.h"
+#include "SPI.h"
+#include "MFRC522.h"
+#include "Button.h"
 
 #include "structs\Hardware.h"
 #include "enums/GameState.h"
 
 #include "Games/Menu/Menu.h"
+#include "Games/RFIDGame/RFIDGame.h"
 
 // Instantiate all components
 
@@ -34,20 +38,29 @@ Led ledRedD(Pins::LED_RED_D);
 RGBLed rgbLedKeypad(Pins::LED_KEYPAD_RED, Pins::LED_KEYPAD_GREEN, Pins::LED_KEYPAD_BLUE);
 RGBLed rgbLedRfid(Pins::LED_RFID_RED, Pins::LED_RFID_GREEN, Pins::LED_RFID_BLUE);
 
+Button buttonAAnswer(Pins::BUTTON_A);
+Button buttonBAnswer(Pins::BUTTON_B);
+Button buttonCAnswer(Pins::BUTTON_C);
+Button buttonDAnswer(Pins::BUTTON_D);
+Button buttonLeft(Pins::BUTTON_LEFT);
+Button buttonRight(Pins::BUTTON_RIGHT);
+
 ThreePositionSwitch menuSwitch(Pins::THREE_POSITION_SWITCH_LEFT, Pins::THREE_POSITION_SWITCH_RIGHT);
 
 const byte KEYPAD_ROWS = 4;
 const byte KEYPAD_COLS = 4;
 char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
-{'1','2','3','A'},
-{'4','5','6','B'},
-{'7','8','9','C'},
-{'*','0','#','D'}
+    {'1','2','3','A'},
+    {'4','5','6','B'},
+    {'7','8','9','C'},
+    {'*','0','#','D'}
 };
 
 byte rowPins[KEYPAD_ROWS] = { Pins::KEYPAD_8, Pins::KEYPAD_7, Pins::KEYPAD_6, Pins::KEYPAD_5 };
 byte colPins[KEYPAD_COLS] = { Pins::KEYPAD_4, Pins::KEYPAD_3, Pins::KEYPAD_2, Pins::KEYPAD_1 };
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS );
+
+MFRC522 rfidSensor(Pins::RFID_SDA, Pins::RFID_RESET);
 
 // Create the Hardware struct
 
@@ -56,6 +69,13 @@ Hardware::Hardware hw {
     buzzer,
     keypad,
     menuSwitch,
+
+    buttonAAnswer,
+    buttonBAnswer,
+    buttonCAnswer,
+    buttonDAnswer,
+    buttonLeft,
+    buttonRight,
 
     ledGreenA,
     ledRedA,
@@ -67,7 +87,9 @@ Hardware::Hardware hw {
     ledRedD,
 
     rgbLedKeypad,
-    rgbLedRfid
+    rgbLedRfid,
+
+    rfidSensor
 };
 
 GameState::GameState gameState = GameState::INTRO;
@@ -75,6 +97,7 @@ GameState::GameState previousGameState = GameState::INTRO;
 
 // Game Modes
 Menu menuScreen(hw);
+RFIDGame rfidGame(hw);
 
 void setup() {
     // ### INIT ###
@@ -82,6 +105,9 @@ void setup() {
     lcd.Init();
 
     keypad.setHoldTime(1000);
+
+    SPI.begin();
+    rfidSensor.PCD_Init();
 
     // ### Starting Sequence ###
     
@@ -106,6 +132,13 @@ void ExitLastGame(){
         case GameState::MENU:
             menuScreen.Exit();
             break;
+
+        case GameState::RFID_GAME:
+            rfidGame.Exit();
+            break;
+
+        case GameState::QUESTION_GAME:
+            break;
         default:
             break;
     }
@@ -118,23 +151,24 @@ void HandleGameStateChange() {
 
     switch (gameState)
     {
-    case GameState::INTRO:
-        break;
-    case GameState::MENU:
-        menuScreen.Init();
+        case GameState::INTRO:
+            break;
+        case GameState::MENU:
+            menuScreen.Init();
 
-        break;
-    case GameState::QUESTION_GAME:
-        Serial.println("Initializing question game");
-        break;
-    case GameState::KEYPAD_GAME:
-        Serial.println("Initializing keypad game");
-        break;
-    case GameState::RFID_GAME:
-        Serial.println("Initializing RFID game");
-        break;
-    default:
-        break;
+            break;
+        case GameState::QUESTION_GAME:
+            Serial.println("Initializing question game");
+            break;
+        case GameState::KEYPAD_GAME:
+            Serial.println("Initializing keypad game");
+            break;
+        case GameState::RFID_GAME:
+            Serial.println("Initializing RFID game");
+            rfidGame.Init();
+            break;
+        default:
+            break;
     }
 }
 
@@ -167,6 +201,16 @@ void loop() {
     switch(gameState){
         case GameState::MENU:
             menuScreen.Tick();
+            break;
+
+        case GameState::QUESTION_GAME:
+            break;
+
+        case GameState::KEYPAD_GAME:
+            break;
+
+        case GameState::RFID_GAME:
+            rfidGame.Tick();
             break;
         default:
             break;

@@ -50,6 +50,11 @@ void Menu::Tick(){
 
     ThreePositionSwitch::Position currentPosition = hw.menuSwitch.GetPosition();
 
+    if(hw.buttonAAnswer.GetState()){
+        hw.lcd.GetInstance().setCursor(1, 0);
+        hw.lcd.GetInstance().print("CIAO");
+    }
+
     if(currentPosition == ThreePositionSwitch::UNCHANGED){
         return;
     }
