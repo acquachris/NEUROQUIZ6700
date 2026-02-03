@@ -6,15 +6,39 @@
 #include "Games/RFIDGame/RFIDGameData.h"
 
 RFIDGame::RFIDGame(Hardware::Hardware& _hw) : hw(_hw){
-    gameStatus = GameStatus::INTRO;
+    gameStatus = GameStatus::EXIT;
+}
+
+CardAssociation FindCardByCardId(const char* id){
+    for(int i = 0; i < RFIDGameData::cardAssociationsLength; i++){
+        if(strcmp(id, RFIDGameData::cardAssociations[i].cardId) == 0){
+            return RFIDGameData::cardAssociations[i];
+        }
+    }
+
+    return RFIDGameData::cardAssociations[RFIDGameData::cardAssociationsLength - 1];
+}
+
+CardAssociation FindCardByAnswerId(const char* answerId){
+    for(int i = 0; i < RFIDGameData::cardAssociationsLength; i++){
+        if(strcmp(answerId, RFIDGameData::cardAssociations[i].answerId) == 0){
+            return RFIDGameData::cardAssociations[i];
+        }
+    }
+
+    return RFIDGameData::cardAssociations[RFIDGameData::cardAssociationsLength - 1];
 }
 
 const char* RFIDGame::ReadCard() {
     static char uidStr[32];
     byte index = 0;
-
+    
+    Serial.println("Looking for card");
     if (!hw.rfidSensor.PICC_IsNewCardPresent()) return nullptr;
+    Serial.println("Card detected");
+
     if (!hw.rfidSensor.PICC_ReadCardSerial()) return nullptr;
+    Serial.println("Card read");
 
     for (byte i = 0; i < hw.rfidSensor.uid.size; i++) {
         byte b = hw.rfidSensor.uid.uidByte[i];
@@ -39,6 +63,7 @@ void RFIDGame::Init(){
     correctAnswers = 0;
     lastQuestionNumber = -1;
     currentQuestionNumber = 0;
+    hw.rgbLedRfid.Off();
 
     hw.lcd.WriteCentered("Gioco selezionato:", "Associa la Carta");
 
@@ -70,7 +95,19 @@ void RFIDGame::PromptQuestion(int number){
 
     Question question = RFIDGameData::questions[number];
 
-    hw.lcd.SafeWrite(question.text);
+    hw.rgbLedRfid.SetColor(255, 255, 255);
+
+    char line[84];
+
+    snprintf(
+        line,
+        sizeof(line),
+        "%d) %s",
+        number + 1, 
+        question.text
+    );
+
+    hw.lcd.SafeWrite(line);
     hw.buzzer.Play(options);
 
     currentQuestionNumber = number;
@@ -79,26 +116,28 @@ void RFIDGame::PromptQuestion(int number){
 void RFIDGame::ShowResults() {
     gameStatus = GameStatus::RESULT;
 
+    hw.rgbLedRfid.Off();
+
     Buzzer::BuzzerPlayOptions options;
     options.notes = Music::Beep;
     options.size = 1;
 
-    char line[21]; // 20 chars + '\0'
+    char line[21];
 
-    // --- Risposte corrette ---
+    // Risposte Corrette
     hw.buzzer.Play(options);
 
     snprintf(
         line,
         sizeof(line),
-        "Risposte esatte: %d",
+        "Risposte giuste: %d",
         correctAnswers
     );
 
     hw.lcd.WriteCentered("Risultati!", line);
     delay(3000);
 
-    // --- Risposte errate ---
+    // Risposte sbagliate
     hw.buzzer.Play(options);
 
     snprintf(
@@ -111,13 +150,18 @@ void RFIDGame::ShowResults() {
     hw.lcd.WriteCentered("Risultati!", line);
     delay(3000);
 
-    // --- Risultato finale ---
+    // Risultato finale
     int totalAnswers = correctAnswers + wrongAnswers;
 
-    // Evita divisione per zero (VERY important)
     int grade = (totalAnswers > 0)
-        ? round((correctAnswers * 10.0f) / totalAnswers)
-        : 0;
+        ? floor(correctAnswers * 10 / totalAnswers)
+        : 0.0f;
+
+    if(grade > 6){
+        hw.rgbLedRfid.SetColor(0, 255, 0);
+    }else{
+        hw.rgbLedRfid.SetColor(255, 0, 0);
+    }
 
     options.size = 4;
     options.notes = (grade >= 6)
@@ -129,7 +173,7 @@ void RFIDGame::ShowResults() {
     snprintf(
         line,
         sizeof(line),
-        "%d/%d (Voto: %d)",
+        "%d/%d (Voto: %d/10)",
         correctAnswers,
         totalAnswers,
         grade
@@ -165,16 +209,18 @@ void RFIDGame::ShowAnswer(bool wasCorrect){
     if(wasCorrect){
         hw.lcd.WriteCentered("Esatto! Complimenti!", "Risposta esatta!");
         hw.buzzer.Play(options);
+        hw.rgbLedRfid.SetColor(0, 255, 0);
 
         delay(3000);
     }else{
-        hw.lcd.WriteCentered("Sbagliato!", "Risposta sbagliata!");
+        hw.rgbLedRfid.SetColor(255, 0, 0);
+        hw.lcd.WriteCentered("No! Hai sbagliato!", "Risposta errata!");
         hw.buzzer.Play(options);
 
         delay(3000);
 
-        // TODO: Show readable result instead of card id
-        hw.lcd.WriteCentered("Risposta esatta:", question.cardId);
+        CardAssociation cardAssociation = FindCardByAnswerId(question.answerId);
+        hw.lcd.WriteCentered("Risposta esatta:", cardAssociation.readableAnswer);
         
         delay(5000);
     }
@@ -188,9 +234,10 @@ void RFIDGame::CheckForAnswer(){
     if(cardId == nullptr) return;
 
     Question currentQuestion = RFIDGameData::questions[currentQuestionNumber];
+    CardAssociation cardAssociation = FindCardByCardId(cardId);
 
     bool isCorrect = true;
-    if(strcmp(cardId, currentQuestion.cardId) == 0){
+    if(strcmp(currentQuestion.answerId, cardAssociation.answerId) == 0){
         // Answer is correct
         correctAnswers++;
     }else{
@@ -211,4 +258,9 @@ void RFIDGame::Tick(){
 
 void RFIDGame::Exit(){
     gameStatus = GameStatus::EXIT;
+    wrongAnswers = 0;
+    correctAnswers = 0;
+    lastQuestionNumber = -1;
+    currentQuestionNumber = 0;
+    hw.rgbLedRfid.Off();
 }

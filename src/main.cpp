@@ -16,6 +16,7 @@
 
 #include "Games/Menu/Menu.h"
 #include "Games/RFIDGame/RFIDGame.h"
+#include "Games/KeypadGame/KeypadGame.h"
 
 // Instantiate all components
 
@@ -98,6 +99,7 @@ GameState::GameState previousGameState = GameState::INTRO;
 // Game Modes
 Menu menuScreen(hw);
 RFIDGame rfidGame(hw);
+KeypadGame keypadGame(hw);
 
 void setup() {
     // ### INIT ###
@@ -133,6 +135,10 @@ void ExitLastGame(){
             menuScreen.Exit();
             break;
 
+        case GameState::KEYPAD_GAME:
+            keypadGame.Exit();
+            break;
+
         case GameState::RFID_GAME:
             rfidGame.Exit();
             break;
@@ -162,6 +168,7 @@ void HandleGameStateChange() {
             break;
         case GameState::KEYPAD_GAME:
             Serial.println("Initializing keypad game");
+            keypadGame.Init();
             break;
         case GameState::RFID_GAME:
             Serial.println("Initializing RFID game");
@@ -207,6 +214,7 @@ void loop() {
             break;
 
         case GameState::KEYPAD_GAME:
+            keypadGame.Tick();
             break;
 
         case GameState::RFID_GAME:
