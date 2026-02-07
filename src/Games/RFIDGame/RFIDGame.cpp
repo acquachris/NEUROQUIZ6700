@@ -108,25 +108,52 @@ void RFIDGame::PromptQuestion(int number){
     options.notes = Music::Beep;
     options.size = 1;
 
-
     RFIDQuestion question = RFIDGameData::questions[number];
 
     hw.rgbLedRfid.SetColor(255, 255, 255);
 
-    char line[84];
+    // Calculate required length
+    int needed = snprintf(nullptr, 0, "%d) %s", number + 1, question.text) + 1;
 
-    snprintf(
-        line,
-        sizeof(line),
-        "%d) %s",
-        number + 1, 
-        question.text
-    );
+    char* fullText = (char*)malloc(needed);
+    if(fullText == nullptr){
+        return;
+    }
 
-    hw.lcd.SafeWrite(line);
+    snprintf(fullText, needed, "%d) %s", number + 1, question.text);
+
+    int pageCount = 0;
+    char** pages = hw.lcd.CreatePagesFromText(fullText, &pageCount);
+
+    hw.lcd.SetPages(pages, pageCount);
     hw.buzzer.Play(options);
 
     currentQuestionNumber = number;
+
+    free(fullText);
+}
+
+void RFIDGame::HandleArrowButtons() {
+    if(gameStatus != GameStatus::QUESTION) return;
+
+    // Check debounce
+    if(millis() - lastPressTime < 500) return;
+
+    bool isRightPressed = hw.buttonRight.GetState();
+    bool isLeftPressed = hw.buttonLeft.GetState();
+
+    if(!isRightPressed && !isLeftPressed) return;
+
+    // Update debounce time
+    lastPressTime = millis();
+
+    Buzzer::BuzzerPlayOptions options;
+    options.notes = Music::Beep;
+    options.size = 1;
+
+    hw.lcd.MovePage(isRightPressed);
+
+    hw.buzzer.Play(options);
 }
 
 void RFIDGame::ShowResults() {
@@ -276,6 +303,7 @@ void RFIDGame::Tick(){
 
     CheckForAnswer();
     CheckForQuestionChange();
+    HandleArrowButtons();
 }
 
 void RFIDGame::Exit(){

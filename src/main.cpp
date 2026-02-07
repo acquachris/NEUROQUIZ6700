@@ -248,3 +248,10 @@ void loop() {
         }
     }
 }
+
+// Sabato 07/02/2026, ore 21:12
+// La logica principale del gioco è conclusa. Funziona tutto.
+// Questo progetto mi ha fatto venire diversi mal di testa
+// Si ringrazia il Ketoprofone (oki) per avermi aiutato
+// È stata una lunga, lunga, lunga avventura. Uno speciale ringraziamento e saluto al carissimo Prof. Tinari per i consigli.
+// ~ Christian

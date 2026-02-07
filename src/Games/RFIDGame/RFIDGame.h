@@ -21,12 +21,15 @@ class RFIDGame {
         void CheckForAnswer();
         void ShowAnswer(bool wasCorrect);
         void ShowResults();
+        void HandleArrowButtons();
 
         int currentQuestionNumber = 0;
         int lastQuestionNumber = -1;
 
         int correctAnswers = 0;
         int wrongAnswers = 0;
+
+        int lastPressTime = 0;
 
         GameStatus gameStatus = GameStatus::INTRO;
 

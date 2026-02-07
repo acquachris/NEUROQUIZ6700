@@ -56,7 +56,7 @@ void QuestionGame::Init() {
 //
 // AGGIORNAMENTO 19:08
 // Signori e signore, è stato un lungo pomeriggio. FUNZIONA TUTTO COME DEVE FUNZIONARE
-// Però ora mi serve un oki per il mal di testa...
+// Però ora mi serve un oki per il mal di testa... EDIT 21:10 ho preso l'oki. va meglio...
 void QuestionGame::PromptQuestion(int questionNumber) {
     DisableAllLeds();
 
@@ -74,8 +74,22 @@ void QuestionGame::PromptQuestion(int questionNumber) {
     currentPageNumber = 0;
     questionState = QuestionState::QUESTION;
 
-    const char** pages = hw.lcd.CreatePagesFromText(question.text, &pageCount);
+
+    // Fai cazzate con l'allocazione della memoria, onestamente non so più cosa sta succedendo
+    int prefixLen = snprintf(nullptr, 0, "%d) ", questionNumber + 1);
+    char* questionPrefix = new char[prefixLen + 1];
+    snprintf(questionPrefix, prefixLen + 1, "%d) ", questionNumber + 1);
+
+    size_t textLen = strlen(questionPrefix) + strlen(question.text) + 2;
+    char* textBuffer = new char[textLen];
+    snprintf(textBuffer, textLen, "%s %s", questionPrefix, question.text);
+
+    const char** pages = hw.lcd.CreatePagesFromText(textBuffer, &pageCount);
     hw.lcd.SetPages(pages, pageCount);
+
+    // Puliamo sta merda per favore... Sennò l'arduino scoppia.
+    delete[] textBuffer;
+    delete[] questionPrefix;
 }
 
 void QuestionGame::HandleArrowButtons() {
@@ -96,7 +110,9 @@ void QuestionGame::HandleArrowButtons() {
     int nextTargetIndex = currentPageNumber + (isRightPressed ? 1 : -1);
 
     if(nextTargetIndex >= pageCount|| nextTargetIndex < 0){
+        DisableAllLeds();
         // Set the new pages
+
         const QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
 
         QuestionState nextQuestionState;
@@ -118,10 +134,42 @@ void QuestionGame::HandleArrowButtons() {
             }
         }
 
+        if(nextQuestionState != QuestionState::QUESTION){
+            SetLedStatus(question.answers[nextQuestionState].answerId, true, true);
+            SetLedStatus(question.answers[nextQuestionState].answerId, false, true);
+        }
 
-        char** pages = nextQuestionState == QuestionState::QUESTION ? 
-            hw.lcd.CreatePagesFromText(question.text, &pageCount) : 
-            hw.lcd.CreatePagesFromText(question.answers[nextQuestionState].text, &pageCount);
+        const char* sourceText;
+        const char* prefix;
+        char answerLetter[3];
+        
+        if (nextQuestionState == QuestionState::QUESTION) {
+            sourceText = question.text;
+
+            int prefixLen = snprintf(nullptr, 0, "%d) ", currentQuestionNumber + 1);
+            char* questionPrefix = new char[prefixLen + 1];
+            snprintf(questionPrefix, prefixLen + 1, "%d) ", currentQuestionNumber + 1);
+            prefix = questionPrefix;
+        } else {
+            sourceText = question.answers[nextQuestionState].text;
+            const char* answerLetters[] = {"A", "B", "C", "D"};
+            int answerIndex = nextQuestionState - QuestionState::ANSWER_A;
+            snprintf(answerLetter, sizeof(answerLetter), "%s)", answerLetters[answerIndex]);
+            prefix = answerLetter;
+        }
+
+        // Ma cosa sto leggendo... Basta allocazione dinamica per favore. LA ODIO.
+        size_t textLen = strlen(prefix) + strlen(sourceText) + 2;
+        char* textBuffer = new char[textLen];
+        snprintf(textBuffer, textLen, "%s %s", prefix, sourceText);
+
+        char** pages = hw.lcd.CreatePagesFromText(textBuffer, &pageCount);
+
+        // Anche qui puliamo sto schifo...
+        delete[] textBuffer;
+        if (nextQuestionState == QuestionState::QUESTION) {
+            delete[] prefix;
+        }
 
         currentPageNumber = isLeftPressed ? pageCount - 1 : 0;
         questionState = nextQuestionState;
