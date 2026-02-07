@@ -76,7 +76,7 @@ void QuestionGame::PromptQuestion(int questionNumber) {
 
 
     // Fai cazzate con l'allocazione della memoria, onestamente non so più cosa sta succedendo
-    int prefixLen = snprintf(nullptr, 0, "%d) ", questionNumber + 1);
+    int prefixLen = snprintf(nullptr, 0, "%d)", questionNumber + 1);
     char* questionPrefix = new char[prefixLen + 1];
     snprintf(questionPrefix, prefixLen + 1, "%d) ", questionNumber + 1);
 
@@ -146,9 +146,9 @@ void QuestionGame::HandleArrowButtons() {
         if (nextQuestionState == QuestionState::QUESTION) {
             sourceText = question.text;
 
-            int prefixLen = snprintf(nullptr, 0, "%d) ", currentQuestionNumber + 1);
+            int prefixLen = snprintf(nullptr, 0, "%d)", currentQuestionNumber + 1);
             char* questionPrefix = new char[prefixLen + 1];
-            snprintf(questionPrefix, prefixLen + 1, "%d) ", currentQuestionNumber + 1);
+            snprintf(questionPrefix, prefixLen + 1, "%d)", currentQuestionNumber + 1);
             prefix = questionPrefix;
         } else {
             sourceText = question.answers[nextQuestionState].text;
