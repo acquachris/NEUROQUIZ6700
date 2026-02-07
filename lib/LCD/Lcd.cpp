@@ -78,8 +78,6 @@ void Lcd::SetPages(const char** pages, int pageCount, int currentPage = 0) {
     _currentPage = currentPage;
     _pagingEnabled = true;
 
-    Serial.println(_pages[_currentPage]);
-
     SafeWrite(_pages[_currentPage], false, false);
 }
 
@@ -99,12 +97,6 @@ void Lcd::MovePage(bool right) {
             _currentPage = _pageCount - 1;
         }
     }
-
-    Serial.print("printing: ");
-    Serial.println(_pages[_currentPage]);
-
-    Serial.print("Current page: ");
-    Serial.println(_currentPage);
 
     SafeWrite(_pages[_currentPage], false, false);
 }
@@ -159,9 +151,7 @@ void Lcd::WriteCentered(const char* line1, const char* line2) {
 
 void Lcd::SafeWrite(const char* text, bool allowWordSplit, bool shouldDisablePaging) {
     if (!text) return;
-    Serial.print("From SafeWrite: ");
-    Serial.println(text);
-
+    
     Clear(shouldDisablePaging);
 
     int lcdCols = 20;
@@ -189,10 +179,18 @@ void Lcd::SafeWrite(const char* text, bool allowWordSplit, bool shouldDisablePag
         if (!allowWordSplit) {
             // Try to find the last space within lcdCols
             int splitPos = lcdCols;
-            while (splitPos > 0 && ptr[splitPos] != ' ') {
-                splitPos--;
+            
+            // Check if character at lcdCols position is a space
+            if (ptr[lcdCols] == ' ') {
+                // Perfect fit - word ends exactly at column boundary
+                splitPos = lcdCols;
+            } else {
+                // Look backwards for a space
+                while (splitPos > 0 && ptr[splitPos] != ' ') {
+                    splitPos--;
+                }
+                if (splitPos == 0) splitPos = lcdCols; // no space found, forced split
             }
-            if (splitPos == 0) splitPos = lcdCols; // no space found, forced split
 
             char temp[lcdCols + 1];
             strncpy(temp, ptr, splitPos);
@@ -200,7 +198,7 @@ void Lcd::SafeWrite(const char* text, bool allowWordSplit, bool shouldDisablePag
             WriteLine(temp, line, shouldDisablePaging);
             line++;
 
-            // Skip spaces for next line
+            // Skip the split position and any following spaces
             ptr += splitPos;
             while (*ptr == ' ') ptr++;
         } else {
@@ -267,22 +265,79 @@ bool Lcd::TextFitsInLcd(const char* text, bool allowWordSplit) {
 
 // EVVAI IMPLEMENTIAMO L'ENNESIMO METODO IN QUESTA CLASSE CHE PER L'ARMORE DI DIO
 // È LA COSA PIU ORRIBILE DI QUESTO MONDO
-char** Lcd::CreatePagesFromText(const char* text, int* pageCount, bool allowWordSplit) {
-    if (!text || strlen(text) == 0) {
+
+// Aggiornamento del 07/02/2026
+// Dopo ore sono riuscito a far funzionare sta merda
+// Si ringrazia profondamente Gemini per il supporto.
+char** Lcd::CreatePagesFromText(const char* text, int* pageCount) {
+    if (!text || text[0] == '\0') {
         if (pageCount) *pageCount = 0;
         return nullptr;
     }
 
-    // We wrap the single text pointer into an array so we can reuse 
-    // the logic you already have in CreatePagesFromSections.
-    const char* sections[1];
-    sections[0] = text;
+    const int lcdCols = 20;
+    const int lcdRows = 4;
+    const int maxCharsPerPage = lcdCols * lcdRows;
 
-    // Note: CreatePagesFromSections currently uses its own internal 
-    // word-split logic. If you want to strictly honor 'allowWordSplit',
-    // you'd need to modify the section logic, but for now, this 
-    // will get your pages generated correctly!
-    return CreatePagesFromSections(sections, 1, pageCount);
+    static char pageStorage[MAX_PAGES][maxCharsPerPage + 1];
+    static char* pagePointers[MAX_PAGES];
+
+    // Init storage
+    for (int i = 0; i < MAX_PAGES; i++) {
+        pagePointers[i] = pageStorage[i];
+        pageStorage[i][0] = '\0';
+    }
+
+    int pageIndex = 0;
+    const char* ptr = text;
+
+    while (*ptr && pageIndex < MAX_PAGES) {
+        char* page = pageStorage[pageIndex];
+        int pageCharCount = 0;
+
+        for (int row = 0; row < lcdRows && *ptr; row++) {
+
+            int remainingTextLen = strlen(ptr);
+            int charsToTake = lcdCols;
+
+            if (remainingTextLen <= lcdCols) {
+                charsToTake = remainingTextLen;
+            } else {
+                // Look backwards from position lcdCols-1 for a space
+                int splitPos = lcdCols - 1;
+                while (splitPos > 0 && ptr[splitPos] != ' ') {
+                    splitPos--;
+                }
+                
+                if (splitPos > 0) {
+                    // Found a space - split there (don't include the space)
+                    charsToTake = splitPos;
+                } else {
+                    // No space found - forced split at lcdCols
+                    charsToTake = lcdCols;
+                }
+            }
+
+            // Copy text
+            strncpy(page + pageCharCount, ptr, charsToTake);
+            pageCharCount += charsToTake;
+            ptr += charsToTake;
+
+            // Skip spaces for next line
+            while (*ptr == ' ') ptr++;
+
+            // Pad rest of line with spaces
+            while (pageCharCount % lcdCols != 0) {
+                page[pageCharCount++] = ' ';
+            }
+        }
+
+        page[pageCharCount] = '\0';
+        pageIndex++;
+    }
+
+    if (pageCount) *pageCount = pageIndex;
+    return pagePointers;
 }
 
 // Ciò che state per leggere è stato CHIARAMENTE generato da un'IA.

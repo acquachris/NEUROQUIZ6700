@@ -16,12 +16,12 @@ namespace QuestionGameData {
 
     inline const QuizQuestion questions[questionsLength] = {
         {
-            "In questa domanda THE risposta corretta sara' la lettera C! Evviva 1 2 3 4 5 6 7 8 9 10!",
+            "In questa domanda la risposta e' C",
             {
-                { 'a', "Risposta A LUNGA MA TANTO LUNGA VEDIAMO SE FUNZIONA todos. 1 2 3 4 5 6 7 8 9 10!", false  },
+                { 'a', "Risposta A 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40", false  },
                 { 'b', "Risposta B", false },
                 { 'c', "Risposta C", true },
-                { 'd', "Risposta D Questa pure la facciamo 1 2 3 4 5 6 7 8 9 10! 9801 3301 1 4 6 87 9 5 6777", false }
+                { 'd', "Risposta D", false }
             }
         }
     };

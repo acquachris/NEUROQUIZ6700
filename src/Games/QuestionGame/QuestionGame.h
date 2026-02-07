@@ -27,8 +27,8 @@ class QuestionGame {
         int pageCount = 0;
         int currentPageNumber = 0;
 
-        int wrongQuestions;
-        int rightQuestions;
+        int wrongAnswers;
+        int correctAnswers;
         int currentQuestionNumber;
         int lastQuestionNuimber;
 
@@ -37,9 +37,11 @@ class QuestionGame {
         void PromptQuestion(int questionNumber);
         void CheckForQuestionChange();
         void CheckForAnswer();
-        void ShowAnswer(bool wasCorrect);
+        void ShowAnswer(bool wasCorrect, char selectedAnswer, char correctAnswer);
         void ShowResults();
         void HandleArrowButtons();
+        void SetLedStatus(char letter, bool isGreen, bool isOn);
+        void DisableAllLeds();
 
     public:
         QuestionGame(Hardware::Hardware& _hw);

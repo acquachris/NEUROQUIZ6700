@@ -7,8 +7,8 @@
 #define DEBOUNCE_TIME = 50
 
 QuestionGame::QuestionGame(Hardware::Hardware& _hw) : hw(_hw) {
-    wrongQuestions = 0;
-    rightQuestions = 0;
+    wrongAnswers = 0;
+    correctAnswers = 0;
     currentQuestionNumber = 0;
     lastQuestionNuimber = -1;
     gameStatus = GameStatus::EXIT;
@@ -53,7 +53,13 @@ void QuestionGame::Init() {
 // AGGIORNAMENTO 15:31
 // Ho scoperto che i testi lunghi mandano COMPLETAMENTE in tilt il sistema. Mannaggia di quella P-
 // Di conseguenza, la versione che ora leggete è completamente riscrita A MANO (fanculo alle AI)
+//
+// AGGIORNAMENTO 19:08
+// Signori e signore, è stato un lungo pomeriggio. FUNZIONA TUTTO COME DEVE FUNZIONARE
+// Però ora mi serve un oki per il mal di testa...
 void QuestionGame::PromptQuestion(int questionNumber) {
+    DisableAllLeds();
+
     const QuizQuestion question = QuestionGameData::questions[questionNumber];
 
     questionState = QuestionState::QUESTION;
@@ -68,7 +74,7 @@ void QuestionGame::PromptQuestion(int questionNumber) {
     currentPageNumber = 0;
     questionState = QuestionState::QUESTION;
 
-    const char** pages = hw.lcd.CreatePagesFromText(question.text, &pageCount, true);
+    const char** pages = hw.lcd.CreatePagesFromText(question.text, &pageCount);
     hw.lcd.SetPages(pages, pageCount);
 }
 
@@ -94,16 +100,13 @@ void QuestionGame::HandleArrowButtons() {
         const QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
 
         QuestionState nextQuestionState;
-        Serial.println("===============================");
 
         if (questionState == QuestionState::QUESTION) {
-            Serial.println("From QUESTION");
             nextQuestionState = isLeftPressed
                 ? QuestionState::ANSWER_D
                 : QuestionState::ANSWER_A;
         }
         else {
-            Serial.println("From ANSWER");
             if (isLeftPressed) {
                 nextQuestionState = (questionState == QuestionState::ANSWER_A)
                     ? QuestionState::QUESTION
@@ -115,36 +118,16 @@ void QuestionGame::HandleArrowButtons() {
             }
         }
 
-        Serial.print("Current question state: ");
-        Serial.println(questionState);
-
-        Serial.print("Next question state: ");
-        Serial.println(nextQuestionState);
-
-        Serial.print("Page count: ");
-        Serial.println(pageCount);
-
-        Serial.print("Current page number: ");
-        Serial.println(currentPageNumber);
-
-        Serial.print("Next page content: ");
-        Serial.println(nextQuestionState == QuestionState::QUESTION ? question.text : question.answers[nextQuestionState].text);
-        Serial.println("===============================\n");
-
 
         char** pages = nextQuestionState == QuestionState::QUESTION ? 
-            hw.lcd.CreatePagesFromText(question.text, &pageCount, true) : 
+            hw.lcd.CreatePagesFromText(question.text, &pageCount) : 
             hw.lcd.CreatePagesFromText(question.answers[nextQuestionState].text, &pageCount);
-            
-        Serial.print("Content of first element: ");
-        Serial.println(pages[0]);
 
         currentPageNumber = isLeftPressed ? pageCount - 1 : 0;
         questionState = nextQuestionState;
 
         hw.lcd.SetPages(pages, pageCount, currentPageNumber);
     }else{
-        Serial.println("Moving page");
         hw.lcd.MovePage(isRightPressed);
         currentPageNumber += isRightPressed ? 1 : -1;
     }   
@@ -157,15 +140,169 @@ void QuestionGame::HandleArrowButtons() {
 }
 
 void QuestionGame::CheckForAnswer(){
+    if(gameStatus != GameStatus::ANSWERING) return;
 
+    bool isAAnswerPressed = hw.buttonAAnswer.GetState();
+    bool isBAnswerPressed = hw.buttonBAnswer.GetState();
+    bool isCAnswerPressed = hw.buttonCAnswer.GetState();
+    bool isDAnswerPressed = hw.buttonDAnswer.GetState();
+
+    if(!isAAnswerPressed && !isBAnswerPressed && !isCAnswerPressed && !isDAnswerPressed) return;
+
+    // An answer has been pressed
+
+    QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
+    bool wasCorrect = false;
+
+    // Figure out which answer was given
+    char selectedAnswer = 'a';
+
+    if(isBAnswerPressed){
+        selectedAnswer = 'b';
+    }else if(isCAnswerPressed){
+        selectedAnswer = 'c';
+    }else if(isDAnswerPressed){
+        selectedAnswer = 'd';
+    }
+
+    // Check if the answer is right
+    char correctAnswer = 'a';
+    for(int i = 0; i < 4; i++){
+        if(!question.answers[i].isCorrect) continue;
+
+        correctAnswer = question.answers[i].answerId;
+        if(correctAnswer == selectedAnswer){
+            wasCorrect = true;
+        }
+
+        break;
+    }
+
+    ShowAnswer(wasCorrect, selectedAnswer, correctAnswer);
 }
 
-void QuestionGame::ShowAnswer(bool wasCorrect){
+void QuestionGame::ShowAnswer(bool wasCorrect, char selectedAnswer, char correctAnswer){
+    gameStatus = GameStatus::ANSWER;
 
+    Buzzer::BuzzerPlayOptions options;
+    options.notes = wasCorrect ? Music::CorrectMusic : Music::WrongMusic;
+    options.size = 4;
+    options.lastNoteMultiplier = 4;
+
+    QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
+
+    if(wasCorrect){
+        hw.lcd.WriteCentered("Esatto! Complimenti!", "Risposta esatta!");
+
+        SetLedStatus(correctAnswer, true, true);
+
+        correctAnswers++;
+
+        hw.buzzer.Play(options);
+
+        delay(3000);
+    }else{
+        SetLedStatus(selectedAnswer, false, true);
+
+        wrongAnswers++;
+
+        hw.lcd.WriteCentered("No! Hai sbagliato!", "Risposta errata!");
+        hw.buzzer.Play(options);
+
+        delay(3000);
+
+        options.notes = Music::Beep;
+        options.size = 1;
+        options.lastNoteMultiplier = 1;
+
+        char answerText[12]; // Enough for "Risposta X\0"
+        sprintf(answerText, "Risposta %c", toupper(correctAnswer));
+
+        // Use these strings with your LCD function
+        hw.lcd.WriteCentered("Risposta esatta:", answerText);
+        SetLedStatus(correctAnswer, true, true);
+        
+        hw.buzzer.Play(options);
+
+        delay(5000);
+    }
+
+    currentQuestionNumber++;
 }
 
-void QuestionGame::ShowResults(){
+void QuestionGame::ShowResults() {
+    gameStatus = GameStatus::RESULTS;
 
+    DisableAllLeds();
+
+    Buzzer::BuzzerPlayOptions options;
+    options.notes = Music::Beep;
+    options.size = 1;
+
+    char line[21];
+
+    // Risposte Corrette
+    hw.buzzer.Play(options);
+
+    snprintf(
+        line,
+        sizeof(line),
+        "Risposte giuste: %d",
+        correctAnswers
+    );
+
+    hw.lcd.WriteCentered("Risultati!", line);
+    delay(3000);
+
+    // Risposte sbagliate
+    hw.buzzer.Play(options);
+
+    snprintf(
+        line,
+        sizeof(line),
+        "Risposte errate: %d",
+        wrongAnswers
+    );
+
+    hw.lcd.WriteCentered("Risultati!", line);
+    delay(3000);
+
+    // Risultato finale
+    int totalAnswers = correctAnswers + wrongAnswers;
+
+    int grade = (totalAnswers > 0)
+        ? floor(correctAnswers * 10 / totalAnswers)
+        : 0.0f;
+
+    if(grade > 6){
+        SetLedStatus('a', true, true);
+        SetLedStatus('b', true, true);
+        SetLedStatus('c', true, true);
+        SetLedStatus('d', true, true);
+    }else{
+        SetLedStatus('a', false, true);
+        SetLedStatus('b', false, true);
+        SetLedStatus('c', false, true);
+        SetLedStatus('d', false, true);
+    }
+
+    options.size = 4;
+    options.notes = (grade >= 6)
+        ? Music::CorrectMusic
+        : Music::WrongMusic;
+
+    hw.buzzer.Play(options);
+
+    snprintf(
+        line,
+        sizeof(line),
+        "%d/%d (Voto: %d/10)",
+        correctAnswers,
+        totalAnswers,
+        grade
+    );
+
+    hw.lcd.WriteCentered("Risultato finale:", line);
 }
 
 void QuestionGame::CheckForQuestionChange(){
@@ -182,17 +319,67 @@ void QuestionGame::CheckForQuestionChange(){
 }
 
 void QuestionGame::Tick() {
-    if(gameStatus != GameStatus::ANSWERING) return;
+    if(gameStatus != GameStatus::ANSWERING && gameStatus != GameStatus::ANSWER) return;
 
     CheckForQuestionChange();
     CheckForAnswer();
     HandleArrowButtons();
 }
 
+void QuestionGame::SetLedStatus(char letter, bool isGreen, bool isOn){
+    switch(letter){
+        case 'a':
+            if(isGreen){
+                hw.ledGreenA.SetState(isOn);
+                break;
+            }
+            hw.ledRedA.SetState(isOn);
+            break;
+        case 'b':
+            if(isGreen){
+                hw.ledGreenB.SetState(isOn);
+                break;
+            }
+            hw.ledRedB.SetState(isOn);
+            break;
+        case 'c':
+            if(isGreen){
+                hw.ledGreenC.SetState(isOn);
+                break;
+            }
+            hw.ledRedC.SetState(isOn);
+            break;
+        case 'd':
+            if(isGreen){
+                hw.ledGreenD.SetState(isOn);
+                break;
+            }
+            hw.ledRedD.SetState(isOn);
+            break;
+        default:
+            break;
+    }
+}
+
+void QuestionGame::DisableAllLeds(){
+    hw.ledGreenA.Off();
+    hw.ledRedA.Off();
+    hw.ledGreenB.Off();
+    hw.ledRedB.Off();
+    hw.ledGreenC.Off();
+    hw.ledRedC.Off();
+    hw.ledGreenD.Off();
+    hw.ledRedD.Off();
+}
+
 void QuestionGame::Exit() {
-    wrongQuestions = 0;
-    rightQuestions = 0;
+    wrongAnswers = 0;
+    correctAnswers = 0;
     currentQuestionNumber = 0;
     lastQuestionNuimber = -1;
+    pageCount = 0;
+    currentPageNumber = 0;
+    DisableAllLeds();
+
     gameStatus = GameStatus::EXIT;
 }

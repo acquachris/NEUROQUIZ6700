@@ -29,6 +29,6 @@ class Lcd {
         void MovePage(bool right);
         bool TextFitsInLcd(const char* text, bool allowWordSplit = false);
 
-        char** CreatePagesFromText(const char* text, int* pageCount, bool allowWordSplit = false);
+        char** CreatePagesFromText(const char* text, int* pageCount);
         char** CreatePagesFromSections(const char** sections, int sectionCount, int* pageCount);
 };

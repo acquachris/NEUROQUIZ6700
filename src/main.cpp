@@ -131,7 +131,7 @@ void setup() {
 
     delay(5000);
 
-    gameState = GameState::QUESTION_GAME;
+    gameState = GameState::MENU;
 }
 
 void ExitLastGame(){
