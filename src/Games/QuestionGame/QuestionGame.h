@@ -10,15 +10,29 @@ class QuestionGame {
             EXIT
         };
 
+        enum QuestionState {
+            QUESTION = -1,
+            ANSWER_A = 0,
+            ANSWER_B = 1,
+            ANSWER_C = 2,
+            ANSWER_D = 3
+        };
+
     private:
         Hardware::Hardware& hw;
 
         GameStatus gameStatus;
+        QuestionState questionState;
+
+        int pageCount = 0;
+        int currentPageNumber = 0;
 
         int wrongQuestions;
         int rightQuestions;
         int currentQuestionNumber;
         int lastQuestionNuimber;
+
+        long lastPressTime = 0;
 
         void PromptQuestion(int questionNumber);
         void CheckForQuestionChange();

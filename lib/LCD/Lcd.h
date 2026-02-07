@@ -25,9 +25,10 @@ class Lcd {
         void ClearLine(int line);
         void SafeWrite(const char* text, bool allowWordSplit = false, bool shouldDisablePaging = true);
 
-        void SetPages(const char** pages, int pageCount);
+        void SetPages(const char** pages, int pageCount, int currentPage = 0);
         void MovePage(bool right);
         bool TextFitsInLcd(const char* text, bool allowWordSplit = false);
 
         char** CreatePagesFromText(const char* text, int* pageCount, bool allowWordSplit = false);
+        char** CreatePagesFromSections(const char** sections, int sectionCount, int* pageCount);
 };

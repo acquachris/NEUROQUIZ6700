@@ -16,12 +16,12 @@ namespace QuestionGameData {
 
     inline const QuizQuestion questions[questionsLength] = {
         {
-            "La risposta e' A. POI TESTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO MOLTO LUNGO",
+            "In questa domanda THE risposta corretta sara' la lettera C! Evviva 1 2 3 4 5 6 7 8 9 10!",
             {
-                { 'a', "Risposta A", true  },
+                { 'a', "Risposta A LUNGA MA TANTO LUNGA VEDIAMO SE FUNZIONA todos. 1 2 3 4 5 6 7 8 9 10!", false  },
                 { 'b', "Risposta B", false },
-                { 'c', "Risposta C", false },
-                { 'd', "Risposta D", false }
+                { 'c', "Risposta C", true },
+                { 'd', "Risposta D Questa pure la facciamo 1 2 3 4 5 6 7 8 9 10! 9801 3301 1 4 6 87 9 5 6777", false }
             }
         }
     };
