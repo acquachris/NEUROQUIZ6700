@@ -1,4 +1,4 @@
-struct Question {
+struct RFIDQuestion {
     const char* text;
     const char* answerId;
 };
@@ -22,7 +22,7 @@ namespace RFIDGameData {
         {
             cardId: "2D 95 3D 06",
             answerId: "cervelletto",
-            readableAnswer: "cervelletto"
+            readableAnswer: "Cervelletto"
         },
         {
             cardId: "C7 13 96 43",
@@ -51,7 +51,7 @@ namespace RFIDGameData {
         }
     };
 
-    const Question questions[questionsLength] = {
+    const RFIDQuestion questions[questionsLength] = {
         {
             text: "La risposta e' il cervello.",
             answerId: "cervello"

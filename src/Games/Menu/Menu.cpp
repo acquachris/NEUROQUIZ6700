@@ -32,13 +32,12 @@ void Menu::Init(){
 
 void Menu::Exit(){
     Serial.println("Exiting menu screen");
+    
     hw.rgbLedKeypad.Off();
     hw.rgbLedRfid.Off();
 
     hw.ledGreenA.Off();
-    hw.ledRedB.Off();
-    hw.ledRedC.Off();
-    hw.ledGreenD.Off();
+    hw.ledGreenB.Off();
 
     hw.lcd.Clear();
 
@@ -49,11 +48,6 @@ void Menu::Tick(){
     Lcd& lcd = hw.lcd;
 
     ThreePositionSwitch::Position currentPosition = hw.menuSwitch.GetPosition();
-
-    if(hw.buttonAAnswer.GetState()){
-        hw.lcd.GetInstance().setCursor(1, 0);
-        hw.lcd.GetInstance().print("CIAO");
-    }
 
     if(currentPosition == ThreePositionSwitch::UNCHANGED){
         return;

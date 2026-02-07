@@ -11,12 +11,15 @@
 #include "MFRC522.h"
 #include "Button.h"
 
+#include "Wire.h"
+
 #include "structs\Hardware.h"
 #include "enums/GameState.h"
 
 #include "Games/Menu/Menu.h"
 #include "Games/RFIDGame/RFIDGame.h"
 #include "Games/KeypadGame/KeypadGame.h"
+#include "Games/QuestionGame/QuestionGame.h"
 
 // Instantiate all components
 
@@ -100,6 +103,7 @@ GameState::GameState previousGameState = GameState::INTRO;
 Menu menuScreen(hw);
 RFIDGame rfidGame(hw);
 KeypadGame keypadGame(hw);
+QuestionGame questionGame(hw);
 
 void setup() {
     // ### INIT ###
@@ -108,6 +112,7 @@ void setup() {
 
     keypad.setHoldTime(1000);
 
+    Wire.setClock(10000);
     SPI.begin();
     rfidSensor.PCD_Init();
 
@@ -126,7 +131,7 @@ void setup() {
 
     delay(5000);
 
-    gameState = GameState::MENU;
+    gameState = GameState::QUESTION_GAME;
 }
 
 void ExitLastGame(){
@@ -144,6 +149,7 @@ void ExitLastGame(){
             break;
 
         case GameState::QUESTION_GAME:
+            questionGame.Exit();
             break;
         default:
             break;
@@ -165,6 +171,7 @@ void HandleGameStateChange() {
             break;
         case GameState::QUESTION_GAME:
             Serial.println("Initializing question game");
+            questionGame.Init();
             break;
         case GameState::KEYPAD_GAME:
             Serial.println("Initializing keypad game");
@@ -211,6 +218,7 @@ void loop() {
             break;
 
         case GameState::QUESTION_GAME:
+            questionGame.Tick();
             break;
 
         case GameState::KEYPAD_GAME:

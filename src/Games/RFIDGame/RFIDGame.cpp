@@ -32,8 +32,16 @@ CardAssociation FindCardByAnswerId(const char* answerId){
 const char* RFIDGame::ReadCard() {
     static char uidStr[32];
     byte index = 0;
+    static unsigned long lastDetectTime = 0;
     
-    Serial.println("Looking for card");
+     Serial.println("Looking for card");
+
+    if (millis() - lastDetectTime > 10000) {
+        Serial.println("RFID timeout, reinitializing reader");
+        hw.rfidSensor.PCD_Init();
+        lastDetectTime = millis();
+    }
+
     if (!hw.rfidSensor.PICC_IsNewCardPresent()) return nullptr;
     Serial.println("Card detected");
 
@@ -50,9 +58,17 @@ const char* RFIDGame::ReadCard() {
             uidStr[index++] = ' ';
     }
 
+    // Removal
+    // Serial.println("Waiting for card removal...");
+    // hw.lcd.WriteCentered("Rimuovi la scheda", "per continuare!");
+    // while (hw.rfidSensor.PICC_IsNewCardPresent()) {
+    //     delay(50);
+    // }
+
     uidStr[index] = '\0';
 
     hw.rfidSensor.PICC_HaltA();
+    hw.rfidSensor.PCD_StopCrypto1();
 
     return uidStr;
 }
@@ -93,7 +109,7 @@ void RFIDGame::PromptQuestion(int number){
     options.size = 1;
 
 
-    Question question = RFIDGameData::questions[number];
+    RFIDQuestion question = RFIDGameData::questions[number];
 
     hw.rgbLedRfid.SetColor(255, 255, 255);
 
@@ -204,12 +220,12 @@ void RFIDGame::ShowAnswer(bool wasCorrect){
     options.lastNoteMultiplier = 4;
 
 
-    Question question = RFIDGameData::questions[currentQuestionNumber];
+    RFIDQuestion question = RFIDGameData::questions[currentQuestionNumber];
 
     if(wasCorrect){
         hw.lcd.WriteCentered("Esatto! Complimenti!", "Risposta esatta!");
-        hw.buzzer.Play(options);
         hw.rgbLedRfid.SetColor(0, 255, 0);
+        hw.buzzer.Play(options);
 
         delay(3000);
     }else{
@@ -219,9 +235,15 @@ void RFIDGame::ShowAnswer(bool wasCorrect){
 
         delay(3000);
 
+        options.notes = Music::Beep;
+        options.size = 1;
+        options.lastNoteMultiplier = 1;
+
         CardAssociation cardAssociation = FindCardByAnswerId(question.answerId);
         hw.lcd.WriteCentered("Risposta esatta:", cardAssociation.readableAnswer);
         
+        hw.buzzer.Play(options);
+
         delay(5000);
     }
 
@@ -233,7 +255,7 @@ void RFIDGame::CheckForAnswer(){
 
     if(cardId == nullptr) return;
 
-    Question currentQuestion = RFIDGameData::questions[currentQuestionNumber];
+    RFIDQuestion currentQuestion = RFIDGameData::questions[currentQuestionNumber];
     CardAssociation cardAssociation = FindCardByCardId(cardId);
 
     bool isCorrect = true;

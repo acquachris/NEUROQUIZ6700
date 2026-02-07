@@ -2,7 +2,12 @@
 #include "Lcd.h"
 #include "LiquidCrystal_I2C.h"
 
-Lcd::Lcd() : _lcd(0x27, 20, 4){
+#define LCD_COLS 20
+#define LCD_ROWS 4
+#define MAX_TEXT_LENGTH 256
+#define MAX_PAGES 32
+
+Lcd::Lcd() : _lcd(0x27, LCD_COLS, LCD_ROWS){
     
 }
 
@@ -13,24 +18,38 @@ void Lcd::Init(){
     Serial.println("LCD Initialized");
 }
 
-void Lcd::Clear() {
+void Lcd::Clear(bool shouldDisablePaging) {
+    if(shouldDisablePaging){
+        _pagingEnabled = false;
+    }
+
     _lcd.clear();
 }
 
 void Lcd::ClearLine(int line){
+    _pagingEnabled = false;
+
     FillLine(line, ' ');
 }
 
 void Lcd::Write(const char* text) {
+    _pagingEnabled = false;
+
     _lcd.print(text);
 }
 
-void Lcd::WriteLine(const char* text, int line) {
+void Lcd::WriteLine(const char* text, int line, bool shouldDisablePaging) {
+    if(shouldDisablePaging){
+        _pagingEnabled = false;
+    }
+
     _lcd.setCursor(0, line);
     _lcd.print(text);
 }
 
 void Lcd::FillLine(int line, char character) {
+    _pagingEnabled = false;
+
     _lcd.setCursor(0, line);
 
     char newLine[21];
@@ -48,11 +67,55 @@ LiquidCrystal_I2C& Lcd::GetInstance() {
     return _lcd;
 }
 
-// Si ringrazia il compagno ChatGPT e Claude AI per i seguenti.
+void Lcd::SetPages(const char** pages, int pageCount) {
+    if (!pages || pageCount <= 0) {
+        _pagingEnabled = false;
+        return;
+    }
+
+    _pages = pages;
+    _pageCount = pageCount;
+    _currentPage = 0;
+    _pagingEnabled = true;
+
+    Serial.println(_pages[_currentPage]);
+
+    SafeWrite(_pages[_currentPage], false, false);
+}
+
+void Lcd::MovePage(bool right) {
+    
+    if (!_pagingEnabled) return;
+    if (!_pages || _pageCount <= 1) return;
+
+    if (right) {
+        _currentPage++;
+        if (_currentPage >= _pageCount) {
+            _currentPage = 0;
+        }
+    } else {
+        _currentPage--;
+        if (_currentPage < 0) {
+            _currentPage = _pageCount - 1;
+        }
+    }
+
+    Serial.print("printing: ");
+    Serial.println(_pages[_currentPage]);
+
+    Serial.print("Current page: ");
+    Serial.println(_currentPage);
+
+    SafeWrite(_pages[_currentPage], false, false);
+}
+
+// Si ringrazia il compagno ChatGPT e Claude AI per i seguenti metodi.
 // Ammetto di essere troppo pigro per scrivere metodi così farraginosi
 // Giuro che non uso più AI (forse :D)
 // Se stai leggendo, ciao :)
 void Lcd::WriteCentered(const char* line1, const char* line2) {
+    _pagingEnabled = false;
+
     int lcdCols = 20;
     int row1 = 1;
     int row2 = 2;
@@ -94,10 +157,10 @@ void Lcd::WriteCentered(const char* line1, const char* line2) {
     _lcd.print(buffer);
 }
 
-void Lcd::SafeWrite(const char* text, bool allowWordSplit) {
+void Lcd::SafeWrite(const char* text, bool allowWordSplit, bool shouldDisablePaging) {
     if (!text) return;
 
-    Clear();
+    Clear(shouldDisablePaging);
 
     int lcdCols = 20;
     int lcdRows = 4;
@@ -115,7 +178,7 @@ void Lcd::SafeWrite(const char* text, bool allowWordSplit) {
 
         if (len <= lcdCols) {
             // Fits in one line
-            WriteLine(ptr, line);
+            WriteLine(ptr, line, shouldDisablePaging);
             line++;
             break;
         }
@@ -132,7 +195,7 @@ void Lcd::SafeWrite(const char* text, bool allowWordSplit) {
             char temp[lcdCols + 1];
             strncpy(temp, ptr, splitPos);
             temp[splitPos] = '\0';
-            WriteLine(temp, line);
+            WriteLine(temp, line, shouldDisablePaging);
             line++;
 
             // Skip spaces for next line
@@ -143,9 +206,160 @@ void Lcd::SafeWrite(const char* text, bool allowWordSplit) {
             char temp[lcdCols + 1];
             strncpy(temp, ptr, lcdCols);
             temp[lcdCols] = '\0';
-            WriteLine(temp, line);
+            WriteLine(temp, line, shouldDisablePaging);
             line++;
             ptr += lcdCols;
         }
     }
+}
+
+bool Lcd::TextFitsInLcd(const char* text, bool allowWordSplit) {
+    if (!text) return true;
+
+    const int lcdCols = 20;
+    const int lcdRows = 4;
+
+    // Working copy
+    char buffer[256];
+    strncpy(buffer, text, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    int usedLines = 0;
+    char* ptr = buffer;
+
+    while (*ptr) {
+        if (usedLines >= lcdRows) {
+            return false; // no more space
+        }
+
+        int len = strlen(ptr);
+
+        if (len <= lcdCols) {
+            usedLines++;
+            break;
+        }
+
+        if (!allowWordSplit) {
+            int splitPos = lcdCols;
+            while (splitPos > 0 && ptr[splitPos] != ' ') {
+                splitPos--;
+            }
+            if (splitPos == 0) splitPos = lcdCols;
+
+            ptr += splitPos;
+            while (*ptr == ' ') ptr++;
+        } else {
+            ptr += lcdCols;
+        }
+
+        usedLines++;
+    }
+
+    return usedLines <= lcdRows;
+}
+
+// Arrivato a questo punto del progetto mi sono esaurito
+// Per favore voglio finire al più presto
+// Aiuto
+// ~ Christian - 05/02/2026 14:48
+
+// EVVAI IMPLEMENTIAMO L'ENNESIMO METODO IN QUESTA CLASSE CHE PER L'ARMORE DI DIO
+// È LA COSA PIU ORRIBILE DI QUESTO MONDO
+char** Lcd::CreatePagesFromText(const char* text, int* pageCount, bool allowWordSplit) {
+    if (!text) {
+        if (pageCount) *pageCount = 0;
+        return nullptr;
+    }
+
+    const int lcdCols = 20;
+    const int lcdRows = 4;
+    const int maxCharsPerPage = lcdCols * lcdRows; // 80 chars max per page
+    
+    // Static storage for pages (persists between calls)
+    static char pageStorage[MAX_PAGES][maxCharsPerPage + 1];
+    static char* pagePointers[MAX_PAGES];
+    
+    // Initialize pointers to point to storage
+    for (int i = 0; i < MAX_PAGES; i++) {
+        pagePointers[i] = pageStorage[i];
+        pageStorage[i][0] = '\0'; // Clear previous content
+    }
+    
+    // Working buffer for the text
+    char buffer[MAX_TEXT_LENGTH];
+    strncpy(buffer, text, MAX_TEXT_LENGTH - 1);
+    buffer[MAX_TEXT_LENGTH - 1] = '\0';
+    
+    int pageIndex = 0;
+    char* ptr = buffer;
+    
+    while (*ptr && pageIndex < MAX_PAGES) {
+        char* currentPage = pageStorage[pageIndex];
+        int pageCharCount = 0;
+        int linesInPage = 0;
+        
+        // Fill the current page (max 4 lines)
+        while (*ptr && linesInPage < lcdRows && pageCharCount < maxCharsPerPage) {
+            int remainingInPage = maxCharsPerPage - pageCharCount;
+            int len = strlen(ptr);
+            
+            if (len <= lcdCols && remainingInPage >= len) {
+                // Remaining text fits in one line
+                strcpy(currentPage + pageCharCount, ptr);
+                pageCharCount += len;
+                
+                // Pad remaining space in line with spaces
+                while ((pageCharCount % lcdCols) != 0 && pageCharCount < maxCharsPerPage) {
+                    currentPage[pageCharCount++] = ' ';
+                }
+                
+                ptr += len;
+                linesInPage++;
+                break;
+            }
+            
+            int charsToTake = (remainingInPage < lcdCols) ? remainingInPage : lcdCols;
+            
+            if (!allowWordSplit && charsToTake == lcdCols) {
+                // Find last space within line length
+                int splitPos = lcdCols;
+                while (splitPos > 0 && ptr[splitPos] != ' ') {
+                    splitPos--;
+                }
+                if (splitPos == 0) splitPos = lcdCols;
+                charsToTake = splitPos;
+            }
+            
+            // Copy line to page
+            strncpy(currentPage + pageCharCount, ptr, charsToTake);
+            pageCharCount += charsToTake;
+            
+            // Pad rest of line with spaces to reach exactly lcdCols characters
+            while ((pageCharCount % lcdCols) != 0 && pageCharCount < maxCharsPerPage) {
+                currentPage[pageCharCount++] = ' ';
+            }
+            
+            ptr += charsToTake;
+            
+            // Skip spaces at start of next line
+            while (*ptr == ' ') ptr++;
+            
+            linesInPage++;
+        }
+        
+        currentPage[pageCharCount] = '\0';
+        pageIndex++;
+    }
+    
+    // Mark end of pages
+    if (pageIndex < MAX_PAGES) {
+        pageStorage[pageIndex][0] = '\0';
+    }
+    
+    // Return the count
+    if (pageCount) {
+        *pageCount = pageIndex;
+    }
+    
+    return pagePointers;
 }

@@ -17,4 +17,9 @@ namespace Music {
         NOTE_C4, NOTE_D4, NOTE_E4, NOTE_G4,
         NOTE_E4, NOTE_D4
     };
+
+    const int QuizMusic[] = {
+        NOTE_C5, NOTE_G4, NOTE_C5,
+        NOTE_E5, NOTE_G5
+    };
 }
