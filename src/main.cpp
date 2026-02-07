@@ -206,9 +206,26 @@ const GameState::GameState GetStateFromPosition(ThreePositionSwitch::Position po
     }
 }
 
+// Cari ragazzi, un piccolo mio marchio lo devo lasciare
+// Premendo C nel menù escoo i crediti. Siamo onesti qui...
+void ShowCredits(){
+    Buzzer::BuzzerPlayOptions options;
+    options.notes = Music::CorrectMusic;
+    options.size = 4;
+    options.lastNoteMultiplier = 8;
+
+    lcd.SafeWrite("Elettronica & Programmazione: Acquarola Christian 4CLS A.S. 2025/2026");
+
+    buzzer.Play(options);
+}
+
 void loop() {
     if(gameState != previousGameState){
         HandleGameStateChange();
+    }
+
+    if(gameState == GameState::MENU && buttonCAnswer.GetState()){
+        ShowCredits();
     }
 
     // Update each state
