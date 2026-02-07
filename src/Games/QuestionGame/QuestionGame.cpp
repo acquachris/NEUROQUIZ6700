@@ -56,62 +56,37 @@ void QuestionGame::PromptQuestion(int questionNumber) {
     options.size = 1;
     hw.buzzer.Play(options);
 
-    int totalPageCount = 0;
-    int tempPageCount = 0;
+    // Build complete text with all sections
+    static char fullText[1024]; // Adjust size as needed
+    fullText[0] = '\0';
     
-    // Static array to hold all page pointers
-    static const char* allPages[50];
+    // Add question
+    strncat(fullText, question.text, sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, "                    ", sizeof(fullText) - strlen(fullText) - 1); // Add padding/separator               ", sizeof(fullText) - strlen(fullText) - 1);
     
-    // Temporary buffers for each answer with prefix
-    static char answerA[256];
-    static char answerB[256];
-    static char answerC[256];
-    static char answerD[256];
+    // Add answers
+    strncat(fullText, "A) ", sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, question.answers[0].text, sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, "                    ", sizeof(fullText) - strlen(fullText) - 1);
     
-    // Build answer strings with A), B), C), D) prefixes
-    snprintf(answerA, sizeof(answerA), "A) %s", question.answers[0].text);
-    snprintf(answerB, sizeof(answerB), "B) %s", question.answers[1].text);
-    snprintf(answerC, sizeof(answerC), "C) %s", question.answers[2].text);
-    snprintf(answerD, sizeof(answerD), "D) %s", question.answers[3].text);
+    strncat(fullText, "B) ", sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, question.answers[1].text, sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, "                    ", sizeof(fullText) - strlen(fullText) - 1);
     
-    // --- Step 1: Get question pages ---
-    tempPageCount = 0;
-    const char** questionPages = hw.lcd.CreatePagesFromText(question.text, &tempPageCount);
-    for (int i = 0; i < tempPageCount && totalPageCount < 50; i++) {
-        allPages[totalPageCount++] = questionPages[i];
-    }
+    strncat(fullText, "C) ", sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, question.answers[2].text, sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, "                    ", sizeof(fullText) - strlen(fullText) - 1);
     
-    // --- Step 2: Add answer A (each answer on separate pages) ---
-    tempPageCount = 0;
-    const char** aAnswerPages = hw.lcd.CreatePagesFromText(answerA, &tempPageCount);
-    for (int i = 0; i < tempPageCount && totalPageCount < 50; i++) {
-        allPages[totalPageCount++] = aAnswerPages[i];
-    }
+    strncat(fullText, "D) ", sizeof(fullText) - strlen(fullText) - 1);
+    strncat(fullText, question.answers[3].text, sizeof(fullText) - strlen(fullText) - 1);
     
-    // --- Step 3: Add answer B ---
-    tempPageCount = 0;
-    const char** bAnswerPages = hw.lcd.CreatePagesFromText(answerB, &tempPageCount);
-    for (int i = 0; i < tempPageCount && totalPageCount < 50; i++) {
-        allPages[totalPageCount++] = bAnswerPages[i];
-    }
-    
-    // --- Step 4: Add answer C ---
-    tempPageCount = 0;
-    const char** cAnswerPages = hw.lcd.CreatePagesFromText(answerC, &tempPageCount);
-    for (int i = 0; i < tempPageCount && totalPageCount < 50; i++) {
-        allPages[totalPageCount++] = cAnswerPages[i];
-    }
-    
-    // --- Step 5: Add answer D ---
-    tempPageCount = 0;
-    const char** dAnswerPages = hw.lcd.CreatePagesFromText(answerD, &tempPageCount);
-    for (int i = 0; i < tempPageCount && totalPageCount < 50; i++) {
-        allPages[totalPageCount++] = dAnswerPages[i];
-    }
+    // Now convert to pages
+    int pageCount = 0;
+    const char** allPages = hw.lcd.CreatePagesFromText(fullText, &pageCount);
 
     // Show on LCD
     gameStatus = GameStatus::ANSWERING;
-    hw.lcd.SetPages(allPages, totalPageCount);
+    hw.lcd.SetPages(allPages, pageCount);
 }
 
 void QuestionGame::HandleArrowButtons() {
