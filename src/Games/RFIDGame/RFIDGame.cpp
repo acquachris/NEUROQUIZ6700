@@ -108,6 +108,8 @@ void RFIDGame::PromptQuestion(int number){
     options.notes = Music::Beep;
     options.size = 1;
 
+    gameStatus = GameStatus::QUESTION;
+
     RFIDQuestion question = RFIDGameData::questions[number];
 
     hw.rgbLedRfid.SetColor(255, 255, 255);
@@ -200,7 +202,7 @@ void RFIDGame::ShowResults() {
         ? floor(correctAnswers * 10 / totalAnswers)
         : 0.0f;
 
-    if(grade > 6){
+    if(grade >= 6){
         hw.rgbLedRfid.SetColor(0, 255, 0);
     }else{
         hw.rgbLedRfid.SetColor(255, 0, 0);

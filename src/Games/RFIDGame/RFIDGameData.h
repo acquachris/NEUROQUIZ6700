@@ -10,7 +10,7 @@ struct CardAssociation {
 };
 
 namespace RFIDGameData {
-    const int questionsLength = 1;
+    const int questionsLength = 9;
     const int cardAssociationsLength = 7;
 
     const CardAssociation cardAssociations[] = {
@@ -53,8 +53,40 @@ namespace RFIDGameData {
 
     const RFIDQuestion questions[questionsLength] = {
         {
-            text: "La risposta e' il cervello. 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40",
-            answerId: "cervello"
+            "E' protetto dalle 3 meningi.",
+            "cervello"
+        },
+        {
+            "E' la porzione piu' voluminosa e specializzata, sede delle funzioni cognitive superiori.",
+            "cervello"
+        },
+        {
+            "Regola il ritmo cardiaco, la pressione arteriosa e la respirazione.",
+            "tronco"
+        },
+        {
+            "Contiene oltre il 50% di tutti i neuroni nonostante sia solo il 10% della massa.",
+            "cervelletto"
+        },
+        {
+            "Comprende il mesencefalo, il ponte di Varolio e il midollo allungato.",
+            "tronco"
+        },
+        {
+            "Indispensabile per la coordinazione dei muscoli volontari e l'equilibrio.",
+            "cervelletto"
+        },
+        {
+            "Diviso da una profonda scanalatura in due emisferi quasi simmetrici.",
+            "cervello"
+        },
+        {
+            "Funge da ponte vitale tra il cervello e il midollo spinale.",
+            "tronco"
+        },
+        {
+            "Contribuisce anche alle funzioni di attenzione e linguaggio.",
+            "cervelletto"
         }
     };
 

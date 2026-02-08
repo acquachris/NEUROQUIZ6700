@@ -4,7 +4,7 @@
 #include "Music.h"
 #include "Games/QuestionGame/QuestionGameData.h"
 
-#define DEBOUNCE_TIME = 50
+#define DEBOUNCE_TIME 50
 
 QuestionGame::QuestionGame(Hardware::Hardware& _hw) : hw(_hw) {
     wrongAnswers = 0;
@@ -63,6 +63,7 @@ void QuestionGame::PromptQuestion(int questionNumber) {
     const QuizQuestion question = QuestionGameData::questions[questionNumber];
 
     questionState = QuestionState::QUESTION;
+    gameStatus = GameStatus::ANSWERING;
 
     Buzzer::BuzzerPlayOptions options;
     options.notes = Music::Beep;
@@ -323,7 +324,7 @@ void QuestionGame::ShowResults() {
         ? floor(correctAnswers * 10 / totalAnswers)
         : 0.0f;
 
-    if(grade > 6){
+    if(grade >= 6){
         SetLedStatus('a', true, true);
         SetLedStatus('b', true, true);
         SetLedStatus('c', true, true);
