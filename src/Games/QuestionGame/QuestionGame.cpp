@@ -5,6 +5,7 @@
 #include "Games/QuestionGame/QuestionGameData.h"
 
 #define DEBOUNCE_TIME 50
+#define BUFFER_SIZE 200  // Buffer per leggere le stringhe da PROGMEM
 
 QuestionGame::QuestionGame(Hardware::Hardware& _hw) : hw(_hw) {
     wrongAnswers = 0;
@@ -39,6 +40,19 @@ void QuestionGame::Init() {
     gameStatus = GameStatus::ANSWERING;
 }
 
+// Helper function: leggi QuizQuestion da PROGMEM
+QuizQuestion ReadQuestion(int index) {
+    QuizQuestion q = {};
+    memcpy_P(&q, &QuestionGameData::questions[index], sizeof(QuizQuestion));
+    return q;
+}
+
+// Helper function: leggi stringa da PROGMEM in un buffer
+void ReadStringFromPROGMEM(const char* progmemStr, char* buffer, size_t bufferSize) {
+    strncpy_P(buffer, progmemStr, bufferSize - 1);
+    buffer[bufferSize - 1] = '\0';
+}
+
 // Diario di bordo
 // Giorno 07/02/2026, ore 14:34
 // Dopo diverse ore di scleri e pianti, questo metodo sta finalmente
@@ -52,15 +66,23 @@ void QuestionGame::Init() {
 //
 // AGGIORNAMENTO 15:31
 // Ho scoperto che i testi lunghi mandano COMPLETAMENTE in tilt il sistema. Mannaggia di quella P-
-// Di conseguenza, la versione che ora leggete è completamente riscrita A MANO (fanculo alle AI)
+// Di conseguenza, la versione che ora leggete è completamente riscritta A MANO (fanculo alle AI)
 //
 // AGGIORNAMENTO 19:08
 // Signori e signore, è stato un lungo pomeriggio. FUNZIONA TUTTO COME DEVE FUNZIONARE
 // Però ora mi serve un oki per il mal di testa... EDIT 21:10 ho preso l'oki. va meglio...
+//
+// AGGIORNAMENTO 08/02/2026, ore XX:XX
+// RAM finita, tutto in PROGMEM. Grazie ancora Claude!
+//
+// ENNESSIMO AGGIONRNAMENTO, DOMENICA 08/02/2026 ORE 12:45
+// Aggiungendo le domande mi sono reso conto di un problema DISASTROSO
+// Questa scheda di merda non riesce a gestire in memoria tutte le domande, perchè pesanti
+// Si ringrazia l'amico ClaudeAI per avermi aiutato a salvare le domande in memoria invece che in RAM.
 void QuestionGame::PromptQuestion(int questionNumber) {
     DisableAllLeds();
 
-    const QuizQuestion question = QuestionGameData::questions[questionNumber];
+    QuizQuestion question = ReadQuestion(questionNumber);
 
     questionState = QuestionState::QUESTION;
     gameStatus = GameStatus::ANSWERING;
@@ -75,22 +97,27 @@ void QuestionGame::PromptQuestion(int questionNumber) {
     currentPageNumber = 0;
     questionState = QuestionState::QUESTION;
 
+    // Buffer per il testo della domanda
+    char textBuffer[BUFFER_SIZE];
+    
+    // Leggi il testo della domanda da PROGMEM
+    ReadStringFromPROGMEM(question.text, textBuffer, BUFFER_SIZE);
 
-    // Fai cazzate con l'allocazione della memoria, onestamente non so più cosa sta succedendo
-    int prefixLen = snprintf(nullptr, 0, "%d)", questionNumber + 1);
-    char* questionPrefix = new char[prefixLen + 1];
-    snprintf(questionPrefix, prefixLen + 1, "%d) ", questionNumber + 1);
+    // Crea il prefisso
+    char questionPrefix[10];
+    snprintf(questionPrefix, sizeof(questionPrefix), "%d) ", questionNumber + 1);
 
-    size_t textLen = strlen(questionPrefix) + strlen(question.text) + 2;
-    char* textBuffer = new char[textLen];
-    snprintf(textBuffer, textLen, "%s %s", questionPrefix, question.text);
+    // Combina prefisso e testo (se c'è spazio)
+    int prefixLen = strlen(questionPrefix);
+    int textLen = strlen(textBuffer);
+    
+    if (prefixLen + textLen < BUFFER_SIZE - 1) {
+        memmove(textBuffer + prefixLen, textBuffer, textLen + 1);
+        memcpy(textBuffer, questionPrefix, prefixLen);
+    }
 
     const char** pages = hw.lcd.CreatePagesFromText(textBuffer, &pageCount);
     hw.lcd.SetPages(pages, pageCount);
-
-    // Puliamo sta merda per favore... Sennò l'arduino scoppia.
-    delete[] textBuffer;
-    delete[] questionPrefix;
 }
 
 void QuestionGame::HandleArrowButtons() {
@@ -114,7 +141,7 @@ void QuestionGame::HandleArrowButtons() {
         DisableAllLeds();
         // Set the new pages
 
-        const QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
+        QuizQuestion question = ReadQuestion(currentQuestionNumber);
 
         QuestionState nextQuestionState;
 
@@ -140,37 +167,32 @@ void QuestionGame::HandleArrowButtons() {
             SetLedStatus(question.answers[nextQuestionState].answerId, false, true);
         }
 
-        const char* sourceText;
-        const char* prefix;
-        char answerLetter[3];
+        char textBuffer[BUFFER_SIZE];
+        char prefix[10];
         
         if (nextQuestionState == QuestionState::QUESTION) {
-            sourceText = question.text;
-
-            int prefixLen = snprintf(nullptr, 0, "%d)", currentQuestionNumber + 1);
-            char* questionPrefix = new char[prefixLen + 1];
-            snprintf(questionPrefix, prefixLen + 1, "%d)", currentQuestionNumber + 1);
-            prefix = questionPrefix;
+            // Leggi il testo della domanda
+            ReadStringFromPROGMEM(question.text, textBuffer, BUFFER_SIZE);
+            snprintf(prefix, sizeof(prefix), "%d) ", currentQuestionNumber + 1);
         } else {
-            sourceText = question.answers[nextQuestionState].text;
-            const char* answerLetters[] = {"A", "B", "C", "D"};
+            // Leggi il testo della risposta
             int answerIndex = nextQuestionState - QuestionState::ANSWER_A;
-            snprintf(answerLetter, sizeof(answerLetter), "%s)", answerLetters[answerIndex]);
-            prefix = answerLetter;
+            ReadStringFromPROGMEM(question.answers[answerIndex].text, textBuffer, BUFFER_SIZE);
+            
+            const char* answerLetters[] = {"A", "B", "C", "D"};
+            snprintf(prefix, sizeof(prefix), "%s) ", answerLetters[answerIndex]);
         }
 
-        // Ma cosa sto leggendo... Basta allocazione dinamica per favore. LA ODIO.
-        size_t textLen = strlen(prefix) + strlen(sourceText) + 2;
-        char* textBuffer = new char[textLen];
-        snprintf(textBuffer, textLen, "%s %s", prefix, sourceText);
+        // Combina prefisso e testo
+        int prefixLen = strlen(prefix);
+        int textLen = strlen(textBuffer);
+        
+        if (prefixLen + textLen < BUFFER_SIZE - 1) {
+            memmove(textBuffer + prefixLen, textBuffer, textLen + 1);
+            memcpy(textBuffer, prefix, prefixLen);
+        }
 
         char** pages = hw.lcd.CreatePagesFromText(textBuffer, &pageCount);
-
-        // Anche qui puliamo sto schifo...
-        delete[] textBuffer;
-        if (nextQuestionState == QuestionState::QUESTION) {
-            delete[] prefix;
-        }
 
         currentPageNumber = isLeftPressed ? pageCount - 1 : 0;
         questionState = nextQuestionState;
@@ -200,7 +222,7 @@ void QuestionGame::CheckForAnswer(){
 
     // An answer has been pressed
 
-    QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
+    QuizQuestion question = ReadQuestion(currentQuestionNumber);
     bool wasCorrect = false;
 
     // Figure out which answer was given
@@ -238,8 +260,6 @@ void QuestionGame::ShowAnswer(bool wasCorrect, char selectedAnswer, char correct
     options.notes = wasCorrect ? Music::CorrectMusic : Music::WrongMusic;
     options.size = 4;
     options.lastNoteMultiplier = 4;
-
-    QuizQuestion question = QuestionGameData::questions[currentQuestionNumber];
 
     if(wasCorrect){
         hw.lcd.WriteCentered("Esatto! Complimenti!", "Risposta esatta!");
