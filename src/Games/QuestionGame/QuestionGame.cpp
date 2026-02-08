@@ -230,6 +230,7 @@ void QuestionGame::CheckForAnswer(){
 }
 
 void QuestionGame::ShowAnswer(bool wasCorrect, char selectedAnswer, char correctAnswer){
+    DisableAllLeds();
     gameStatus = GameStatus::ANSWER;
 
     Buzzer::BuzzerPlayOptions options;
