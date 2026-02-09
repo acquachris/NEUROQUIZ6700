@@ -11,7 +11,7 @@ QuestionGame::QuestionGame(Hardware::Hardware& _hw) : hw(_hw) {
     wrongAnswers = 0;
     correctAnswers = 0;
     currentQuestionNumber = 0;
-    lastQuestionNuimber = -1;
+    lastQuestionNumber = -1;
     gameStatus = GameStatus::EXIT;
 }
 
@@ -376,9 +376,9 @@ void QuestionGame::ShowResults() {
 }
 
 void QuestionGame::CheckForQuestionChange(){
-    if(currentQuestionNumber == lastQuestionNuimber) return;
+    if(currentQuestionNumber == lastQuestionNumber) return;
 
-    lastQuestionNuimber = currentQuestionNumber;
+    lastQuestionNumber = currentQuestionNumber;
 
     if(currentQuestionNumber >= QuestionGameData::questionsLength){
         ShowResults();
@@ -446,7 +446,7 @@ void QuestionGame::Exit() {
     wrongAnswers = 0;
     correctAnswers = 0;
     currentQuestionNumber = 0;
-    lastQuestionNuimber = -1;
+    lastQuestionNumber = -1;
     pageCount = 0;
     currentPageNumber = 0;
     DisableAllLeds();

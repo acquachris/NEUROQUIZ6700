@@ -30,7 +30,7 @@ class QuestionGame {
         int wrongAnswers;
         int correctAnswers;
         int currentQuestionNumber;
-        int lastQuestionNuimber;
+        int lastQuestionNumber;
 
         long lastPressTime = 0;
 

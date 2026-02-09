@@ -96,7 +96,7 @@ void RFIDGame::Init(){
 
     hw.buzzer.Play(options);
 
-    hw.lcd.SafeWrite("Associa i compiti del Sistema Nervoso ad una carta.");
+    hw.lcd.SafeWrite("Associa i compiti e le caratteristiche del Sistema Nervoso ad una carta.");
 
     delay(5000);
 

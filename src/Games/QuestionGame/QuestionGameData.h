@@ -15,7 +15,7 @@ struct QuizQuestion {
 };
 
 namespace QuestionGameData {
-    inline const int questionsLength = 13;
+    inline const int questionsLength = 22;
 
     // Question 1
     const char q1_text[] PROGMEM = "Quale delle seguenti strutture NON fa parte delle meningi, le membrane protettive del Sistema Nervoso Centrale?";
@@ -108,27 +108,82 @@ namespace QuestionGameData {
     const char q13_c[] PROGMEM = "Malattia di Alzheimer";
     const char q13_d[] PROGMEM = "Sclerosi Laterale Amiotrofica (SLA)";
 
+    // Question 14
+    const char q14_text[] PROGMEM = "Cosa avviene nello spazio intersinaptico durante la trasmissione chimica?";
+    const char q14_a[] PROGMEM = "Il potenziale d'azione passa direttamente da un neurone all'altro attraverso giunzioni comunicanti.";
+    const char q14_b[] PROGMEM = "I neurotrasmettitori rilasciati dalla cella presinaptica diffondono verso la cellula postsinaptica.";
+    const char q14_c[] PROGMEM = "I canali ionici si chiudono impedendo la depolarizzazione";
+    const char q14_d[] PROGMEM = "La cellula postsinaptica libera neurotrasmettitori che tornano indietro.";
+
+    // Question 15
+    const char q15_text[] PROGMEM = "Cosa caratterizza principalmente una sinapsi elettrica?";
+    const char q15_a[] PROGMEM = "La presenza di uno spazio intersinaptico ampio.";
+    const char q15_b[] PROGMEM = "Il coinvolgimento di neurotrasmettitori.";
+    const char q15_c[] PROGMEM = "La trasmissione continua e senza interruzione del potenziale d'azione.";
+    const char q15_d[] PROGMEM = "L'effetto solo inibitorio sulla cellula postsinaptica.";
+
+    // Question 16
+    const char q16_text[] PROGMEM = "Quale dei seguenti gruppi di neurotrasmettitori comprende le endorfine?";
+    const char q16_a[] PROGMEM = "Amminoacidi";
+    const char q16_b[] PROGMEM = "Ammine biogene";
+    const char q16_c[] PROGMEM = "Neuropeptidi";
+    const char q16_d[] PROGMEM = "Neurotrasmettitori gassosi";
+
+    // Question 17
+    const char q17_text[] PROGMEM = "Cosa accade ai neurotrasmettitori dopo aver svolto il loro compito nella trasmissione chimica?";
+    const char q17_a[] PROGMEM = "Si duplicano";
+    const char q17_b[] PROGMEM = "Vengono distrutti sempre e solo dal sistema immunitario";
+    const char q17_c[] PROGMEM = "Rimangono per sempre nella fessura sinaptica per mantenere attiva la comunicazione.";
+    const char q17_d[] PROGMEM = "Sono rapidamente rimossi per arrestarne gli effetti.";
+
+    // Question 18
+    const char q18_text[] PROGMEM = "In condizioni di riposo, la differenza di carica tra l'interno e l'esterno dell'assone:";
+    const char q18_a[] PROGMEM = "E' nulla.";
+    const char q18_b[] PROGMEM = "E' positiva.";
+    const char q18_c[] PROGMEM = "E' negativa.";
+    const char q18_d[] PROGMEM = "E' misurata in ampere.";
+
+    // Question 19
+    const char q19_text[] PROGMEM = "La differenza di carica tra interno e esterno dell'assone e' data:";
+    const char q19_a[] PROGMEM = "Dal passaggio di acqua.";
+    const char q19_b[] PROGMEM = "Dalla presenza di ioni Na+ all'esterno e K+ all'interno.";
+    const char q19_c[] PROGMEM = "Dal passaggio di elettroni.";
+    const char q19_d[] PROGMEM = "Dalla presenza di ioni Na+ all'interno e K+ all'esterno.";
+
+    // Question 20
+    const char q20_text[] PROGMEM = "Durante la trasmissione dell'impulso nervoso si susseguono rapidamente 3 fasi. Quali sono e in che ordine avvengono?";
+    const char q20_a[] PROGMEM = "Depolarizzazione, Iperpolarizzazione e Ripolarizzazione.";
+    const char q20_b[] PROGMEM = "Iperpolarizzazione, Depolarizzazione e Ripolarizzazione.";
+    const char q20_c[] PROGMEM = "Ripolarizzazione, Iperpolarizzazione e Depolarizzazione.";
+    const char q20_d[] PROGMEM = "Iperpolarizzazione, Ripolarizzazione e Depolarizzazione.";
+
+    // Question 21
+    const char q21_text[] PROGMEM = "La trasmissione dell'impulso nervoso inizia:";
+    const char q21_a[] PROGMEM = "Con l'uscita di K+.";
+    const char q21_b[] PROGMEM = "Con l'ingresso di Na+.";
+    const char q21_c[] PROGMEM = "Con l'azione della pompa Na+/K+.";
+    const char q21_d[] PROGMEM = "Al raggiungimento del valore soglia.";
+
+    // Question 22
+    const char q22_text[] PROGMEM = "Nella trasmissione dell'impulso nervoso, uno stimolo piu' intenso:";
+    const char q22_a[] PROGMEM = "Modifica l'ampiezza del potenziale d'azione.";
+    const char q22_b[] PROGMEM = "Causa l'aumento del valore soglia.";
+    const char q22_c[] PROGMEM = "Aumenta la frequenza con cui gli impulsi vengono trasmessi.";
+    const char q22_d[] PROGMEM = "Causa l'abbassamento del valore soglia.";
+
+
     // Array of questions in PROGMEM
     const QuizQuestion questions[questionsLength] PROGMEM = {
-        { 
-            q1_text, 
+        {
+            q14_text, 
             {
-                { 'a', q1_a, false }, 
-                { 'b', q1_b, false }, 
-                { 'c', q1_c, false }, 
-                { 'd', q1_d, true }
+                { 'a', q14_a, false }, 
+                { 'b', q14_b, true }, 
+                { 'c', q14_c, false }, 
+                { 'd', q14_d, false }
             } 
         },
-        { 
-            q2_text, 
-            {
-                { 'a', q2_a, false }, 
-                { 'b', q2_b, true }, 
-                { 'c', q2_c, false }, 
-                { 'd', q2_d, false }
-            } 
-        },
-        { 
+        {
             q3_text, 
             {
                 { 'a', q3_a, false }, 
@@ -137,43 +192,16 @@ namespace QuestionGameData {
                 { 'd', q3_d, false }
             } 
         },
-        { 
-            q4_text, 
+        {
+            q20_text,
             {
-                { 'a', q4_a, false }, 
-                { 'b', q4_b, false }, 
-                { 'c', q4_c, true }, 
-                { 'd', q4_d, false }
-            } 
+                { 'a', q20_a, true }, 
+                { 'b', q20_b, false }, 
+                { 'c', q20_c, false }, 
+                { 'd', q20_d, false }
+            }
         },
-        { 
-            q5_text, 
-            {
-                { 'a', q5_a, false }, 
-                { 'b', q5_b, true }, 
-                { 'c', q5_c, false }, 
-                { 'd', q5_d, false }
-            } 
-        },
-        { 
-            q6_text, 
-            {
-                { 'a', q6_a, false }, 
-                { 'b', q6_b, false }, 
-                { 'c', q6_c, true }, 
-                { 'd', q6_d, false }
-            } 
-        },
-        { 
-            q7_text, 
-            {
-                { 'a', q7_a, false }, 
-                { 'b', q7_b, true }, 
-                { 'c', q7_c, false }, 
-                { 'd', q7_d, false }
-            } 
-        },
-        { 
+        {
             q8_text, 
             {
                 { 'a', q8_a, true }, 
@@ -182,25 +210,25 @@ namespace QuestionGameData {
                 { 'd', q8_d, false }
             } 
         },
-        { 
-            q9_text, 
+        {
+            q17_text, 
             {
-                { 'a', q9_a, false }, 
-                { 'b', q9_b, false }, 
-                { 'c', q9_c, false }, 
-                { 'd', q9_d, true }
+                { 'a', q17_a, false }, 
+                { 'b', q17_b, false }, 
+                { 'c', q17_c, false }, 
+                { 'd', q17_d, true }
             } 
         },
-        { 
-            q10_text, 
+        {
+            q1_text, 
             {
-                { 'a', q10_a, false }, 
-                { 'b', q10_b, true }, 
-                { 'c', q10_c, false }, 
-                { 'd', q10_d, false }
+                { 'a', q1_a, false }, 
+                { 'b', q1_b, false }, 
+                { 'c', q1_c, false }, 
+                { 'd', q1_d, true }
             } 
         },
-        { 
+        {
             q11_text, 
             {
                 { 'a', q11_a, false }, 
@@ -209,7 +237,88 @@ namespace QuestionGameData {
                 { 'd', q11_d, false }
             } 
         },
-        { 
+        {
+            q6_text, 
+            {
+                { 'a', q6_a, false }, 
+                { 'b', q6_b, false }, 
+                { 'c', q6_c, true }, 
+                { 'd', q6_d, false }
+            } 
+        },
+        {
+            q22_text,
+            {
+                { 'a', q22_a, false }, 
+                { 'b', q22_b, false },
+                { 'c', q22_c, true }, 
+                { 'd', q22_d, false }
+            }
+        },
+        {
+            q9_text, 
+            {
+                { 'a', q9_a, false }, 
+                { 'b', q9_b, false }, 
+                { 'c', q9_c, false }, 
+                { 'd', q9_d, true }
+            } 
+        },
+        {
+            q15_text, 
+            {
+                { 'a', q15_a, false }, 
+                { 'b', q15_b, false }, 
+                { 'c', q15_c, true }, 
+                { 'd', q15_d, false }
+            } 
+        },
+        {
+            q4_text, 
+            {
+                { 'a', q4_a, false }, 
+                { 'b', q4_b, false }, 
+                { 'c', q4_c, true }, 
+                { 'd', q4_d, false }
+            } 
+        },
+        {
+            q19_text,
+            {
+                { 'a', q19_a, false }, 
+                { 'b', q19_b, true },
+                { 'c', q19_c, false }, 
+                { 'd', q19_d, false }
+            }
+        },
+        {
+            q2_text, 
+            {
+                { 'a', q2_a, false }, 
+                { 'b', q2_b, true }, 
+                { 'c', q2_c, false }, 
+                { 'd', q2_d, false }
+            } 
+        },
+        {
+            q18_text, 
+            {
+                { 'a', q18_a, false }, 
+                { 'b', q18_b, false }, 
+                { 'c', q18_c, true }, 
+                { 'd', q18_d, false }
+            }
+        },
+        {
+            q7_text, 
+            {
+                { 'a', q7_a, false }, 
+                { 'b', q7_b, true }, 
+                { 'c', q7_c, false }, 
+                { 'd', q7_d, false }
+            } 
+        },
+        {
             q12_text, 
             {
                 { 'a', q12_a, false }, 
@@ -218,7 +327,43 @@ namespace QuestionGameData {
                 { 'd', q12_d, false }
             } 
         },
-        { 
+        {
+            q16_text,
+            {
+                { 'a', q16_a, false }, 
+                { 'b', q16_b, false }, 
+                { 'c', q16_c, true }, 
+                { 'd', q16_d, false }
+            }        
+        },
+        {
+            q5_text, 
+            {
+                { 'a', q5_a, false }, 
+                { 'b', q5_b, true }, 
+                { 'c', q5_c, false }, 
+                { 'd', q5_d, false }
+            } 
+        },
+        {
+            q10_text, 
+            {
+                { 'a', q10_a, false }, 
+                { 'b', q10_b, true }, 
+                { 'c', q10_c, false }, 
+                { 'd', q10_d, false }
+            } 
+        },
+        {
+            q21_text,
+            {
+                { 'a', q21_a, false }, 
+                { 'b', q21_b, false },
+                { 'c', q21_c, false }, 
+                { 'd', q21_d, true }
+            }
+        },
+        {
             q13_text, 
             {
                 { 'a', q13_a, true }, 
