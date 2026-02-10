@@ -34,7 +34,7 @@ const char* RFIDGame::ReadCard() {
     byte index = 0;
     static unsigned long lastDetectTime = 0;
     
-     Serial.println("Looking for card");
+    //Serial.println("Looking for card");
 
     if (millis() - lastDetectTime > 10000) {
         Serial.println("RFID timeout, reinitializing reader");

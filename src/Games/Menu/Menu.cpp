@@ -3,6 +3,7 @@
 #include "structs\Hardware.h"
 #include "Music.h"
 #include "enums\GameState.h"
+#include "Games/Menu/MenuData.h"
 
 const char* GetGameNameFromPosition(ThreePositionSwitch::Position position){
     switch (position){
@@ -27,17 +28,20 @@ const char* GetGameNameFromPosition(ThreePositionSwitch::Position position){
 Menu::Menu(Hardware::Hardware& _hw) : hw(_hw){}
 
 void Menu::Init(){
-    
+    currentNote = -1;
 }
 
 void Menu::Exit(){
     Serial.println("Exiting menu screen");
+    currentNote = -1;
     
     hw.rgbLedKeypad.Off();
     hw.rgbLedRfid.Off();
 
     hw.ledGreenA.Off();
     hw.ledGreenB.Off();
+    hw.ledGreenC.Off();
+    hw.ledGreenD.Off();
 
     hw.lcd.Clear();
 
@@ -63,6 +67,8 @@ void Menu::Tick(){
 
             hw.ledGreenA.Off();
             hw.ledGreenB.Off();
+            hw.ledGreenC.Off();
+            hw.ledGreenD.Off();
             break;
 
         case ThreePositionSwitch::CENTER:
@@ -71,15 +77,19 @@ void Menu::Tick(){
 
             hw.ledGreenA.On();
             hw.ledGreenB.On();
+            hw.ledGreenC.On();
+            hw.ledGreenD.On();
 
             break;
 
         case ThreePositionSwitch::RIGHT:
             hw.rgbLedKeypad.Off();
-            hw.rgbLedRfid.SetColor(2555, 255, 0);
+            hw.rgbLedRfid.SetColor(255, 255, 0);
 
             hw.ledGreenA.Off();
             hw.ledGreenB.Off();
+            hw.ledGreenC.Off();
+            hw.ledGreenD.Off();
 
             break;
 
@@ -88,12 +98,25 @@ void Menu::Tick(){
             break;
     }
     
+    // Troviamo le note!
     Buzzer::BuzzerPlayOptions options;
-    options.notes = Music::Beep;
+
+    // options.notes = Music::Beep; NAH IL BEEP È NOIOSO, MEGLIO YLIA.
+    
+    if(currentNote >= MenuData::numberOfNotes){
+        currentNote = 0;
+    }
+
+    int notes[1];
+    notes[0] = currentNote >= 0 ? MenuData::menuMusic[currentNote] : Music::Beep[0];
+    currentNote++;
+
+    options.notes = notes;
     options.size = 1;
     options.ignoreDelay = true;
     options.noteDuration = 150;
-    hw.buzzer.Play(options);
 
     lcd.WriteCentered("Seleziona gioco:", gameName);
+
+    hw.buzzer.Play(options);
 }

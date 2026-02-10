@@ -5,7 +5,7 @@
 #include "Games/QuestionGame/QuestionGameData.h"
 
 #define DEBOUNCE_TIME 50
-#define BUFFER_SIZE 200  // Buffer per leggere le stringhe da PROGMEM
+#define BUFFER_SIZE 256  // Buffer per leggere le stringhe da PROGMEM
 
 QuestionGame::QuestionGame(Hardware::Hardware& _hw) : hw(_hw) {
     wrongAnswers = 0;

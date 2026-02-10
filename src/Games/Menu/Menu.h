@@ -4,7 +4,9 @@
 class Menu {
     private:
         Hardware::Hardware& hw;
-        
+
+        int currentNote;
+
         void HandleMenuClose();
 
     public:
