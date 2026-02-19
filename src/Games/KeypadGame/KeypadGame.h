@@ -14,7 +14,7 @@ class KeypadGame {
     private:
         Hardware::Hardware& hw;
         
-        char answer[16];
+        char answer[17];
 
         int numberOfTries = 1;
         
@@ -25,6 +25,7 @@ class KeypadGame {
         void CheckForRetry();
         void UpdateLcd();
         void ClearAnswerFromMemory();
+        void ShowInstructions();
         
         GameStatus gameStatus = GameStatus::INTRO;
 

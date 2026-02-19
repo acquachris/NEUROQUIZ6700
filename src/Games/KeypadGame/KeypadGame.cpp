@@ -34,17 +34,16 @@ void KeypadGame::Init(){
 
     hw.buzzer.Play(options);
 
-    hw.lcd.SafeWrite("Risolvi il cruciverba e scrivi il codice!");
+    hw.lcd.SafeWrite("Risolvi il cruciverba e scrivi il codice segreto ricavato!");
 
     delay(5000);
 
-    hw.buzzer.Play(options);
+    ShowInstructions();
 
-    hw.lcd.Clear();
-    hw.lcd.WriteLine("Istruzioni tastiera:", 0);
-    hw.lcd.WriteLine("A: Cancella ultimo", 1);
-    hw.lcd.WriteLine("C: Resetta risposta", 2);
-    hw.lcd.WriteLine("D: Invia risposta", 3);
+    delay(8000);
+
+    hw.lcd.SafeWrite("Premi il pulsante \"0\" per leggere nuovamente le istruzioni.");
+    hw.buzzer.Play(options);
 
     delay(5000);
 
@@ -52,6 +51,22 @@ void KeypadGame::Init(){
     
     hw.rgbLedKeypad.SetColor(255, 255, 255);
     UpdateLcd();
+}
+
+void KeypadGame::ShowInstructions(){
+    Buzzer::BuzzerPlayOptions options;
+    options.notes = Music::Beep;
+    options.size = 1;
+
+    hw.lcd.Clear();
+
+    hw.lcd.WriteLine("Istruzioni tastiera:", 0);
+    hw.lcd.WriteLine("A: Cancella ultimo", 1);
+    hw.lcd.WriteLine("C: Resetta risposta", 2);
+    hw.lcd.WriteLine("D: Invia risposta", 3);
+
+    hw.buzzer.Play(options);
+
 }
 
 void KeypadGame::CheckAnswer(){
@@ -91,6 +106,7 @@ void KeypadGame::CheckAnswer(){
         Buzzer::BuzzerPlayOptions options;
         options.notes = Music::WrongMusic;
         options.size = 4;
+        options.lastNoteMultiplier = 4;
 
         hw.buzzer.Play(options);
 
@@ -138,6 +154,15 @@ void KeypadGame::CheckKeypad(){
             break;
         }
 
+        case '0': {
+            ShowInstructions();
+            
+            delay(8000);
+
+            UpdateLcd();
+            break;
+        }
+
         default: {
             if(key == 'B' || key == '*'|| key == '#') break;
 
@@ -155,15 +180,15 @@ void KeypadGame::CheckKeypad(){
 void KeypadGame::UpdateLcd(){
     hw.lcd.Clear();
 
-    char display[16];
-    for (int i = 0; i < 15; i++){
+    char display[KeypadGameData::answerLength + 1];
+    for (int i = 0; i < KeypadGameData::answerLength; i++){
         if (answer[i] != '\0'){
             display[i] = answer[i];
         } else {
             display[i] = '_';
         }
     }
-    display[15] = '\0';
+    display[KeypadGameData::answerLength] = '\0';
 
     hw.lcd.WriteCentered("Inserisci il codice:", display);
 
