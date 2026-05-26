@@ -155,11 +155,22 @@ Il dispositivo permette agli studenti di:
 
 ---
 
-# 👨‍💻 Autore
+# 👨‍💻 Autore Repository
 
 **Christian Acquarola**  
 Classe **4CLS**  
 Anno scolastico **2025/2026**
+
+# 🤝 Gruppo di lavoro
+
+Membri del gruppo:
+- Acquarola Andrea
+- Acquarola Christian
+- Pasciullo Gioele
+- Santobuono Antonello
+- Simone Francesco Pio
+
+---
 
 ## Crediti
 
