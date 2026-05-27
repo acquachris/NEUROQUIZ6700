@@ -25,10 +25,33 @@ const char* GetGameNameFromPosition(ThreePositionSwitch::Position position){
     }
 }
 
+const char* GetGameNameFromIndex(int index){
+    switch (index){
+        case 0:
+            return "Cruciverba";
+            break;
+
+        case 1:
+            return "Quiz";
+            break;
+
+        case 2:
+            return "Associa la Carta";
+            break;
+
+        default:
+            return "non puoi essere qui!";
+            break;
+    }
+}
+
 Menu::Menu(Hardware::Hardware& _hw) : hw(_hw){}
 
 void Menu::Init(){
     currentNote = -1;
+
+    currentMenuIndex = 0;
+    menuLoaded = false;
 }
 
 void Menu::Exit(){
@@ -51,16 +74,78 @@ void Menu::Exit(){
 void Menu::Tick(){
     Lcd& lcd = hw.lcd;
 
-    ThreePositionSwitch::Position currentPosition = hw.menuSwitch.GetPosition();
+    // ! 27/05/2026, Lo switch si è rotto in fase di scrittura del capolavoro. Si cambia il sistema quindi con i pulsanti.
 
-    if(currentPosition == ThreePositionSwitch::UNCHANGED){
-        return;
+    // ThreePositionSwitch::Position currentPosition = hw.menuSwitch.GetPosition();
+
+    // if(currentPosition == ThreePositionSwitch::UNCHANGED){
+    //     return;
+    // }
+
+    // const char* gameName = GetGameNameFromPosition(currentPosition);
+
+    const bool isRightPressed = hw.buttonRight.GetState();
+    const bool isLeftPressed = hw.buttonLeft.GetState();
+    
+    if(menuLoaded && (!isRightPressed && !isLeftPressed)) return;
+
+    menuLoaded = true;
+
+    if(isRightPressed){
+        currentMenuIndex++;
+    }else if(isLeftPressed){
+        currentMenuIndex--;
     }
 
-    const char* gameName = GetGameNameFromPosition(currentPosition);
+    if(currentMenuIndex < 0){
+        currentMenuIndex = 2;
+    }else if(currentMenuIndex >= MenuData::numberOfGames){
+        currentMenuIndex = 0;
+    }
 
-    switch(currentPosition){
-        case ThreePositionSwitch::LEFT:
+    const char* gameName = GetGameNameFromIndex(currentMenuIndex);
+
+    // switch(currentPosition){
+    //     case ThreePositionSwitch::LEFT:
+    //         hw.rgbLedKeypad.SetColor(0, 0, 255);
+
+    //         hw.rgbLedRfid.Off();
+
+    //         hw.ledGreenA.Off();
+    //         hw.ledGreenB.Off();
+    //         hw.ledGreenC.Off();
+    //         hw.ledGreenD.Off();
+    //         break;
+
+    //     case ThreePositionSwitch::CENTER:
+    //         hw.rgbLedKeypad.Off();
+    //         hw.rgbLedRfid.Off();
+
+    //         hw.ledGreenA.On();
+    //         hw.ledGreenB.On();
+    //         hw.ledGreenC.On();
+    //         hw.ledGreenD.On();
+
+    //         break;
+
+    //     case ThreePositionSwitch::RIGHT:
+    //         hw.rgbLedKeypad.Off();
+    //         hw.rgbLedRfid.SetColor(255, 255, 0);
+
+    //         hw.ledGreenA.Off();
+    //         hw.ledGreenB.Off();
+    //         hw.ledGreenC.Off();
+    //         hw.ledGreenD.Off();
+
+    //         break;
+
+    //     case ThreePositionSwitch::UNCHANGED:
+    //     default: 
+    //         break;
+    // }
+
+    switch(currentMenuIndex){
+        case 0:
             hw.rgbLedKeypad.SetColor(0, 0, 255);
 
             hw.rgbLedRfid.Off();
@@ -71,7 +156,7 @@ void Menu::Tick(){
             hw.ledGreenD.Off();
             break;
 
-        case ThreePositionSwitch::CENTER:
+        case 1:
             hw.rgbLedKeypad.Off();
             hw.rgbLedRfid.Off();
 
@@ -82,7 +167,7 @@ void Menu::Tick(){
 
             break;
 
-        case ThreePositionSwitch::RIGHT:
+        case 2:
             hw.rgbLedKeypad.Off();
             hw.rgbLedRfid.SetColor(255, 255, 0);
 
@@ -93,7 +178,6 @@ void Menu::Tick(){
 
             break;
 
-        case ThreePositionSwitch::UNCHANGED:
         default: 
             break;
     }

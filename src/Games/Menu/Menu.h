@@ -6,6 +6,8 @@ class Menu {
         Hardware::Hardware& hw;
 
         int currentNote;
+        int currentMenuIndex = 0;
+        bool menuLoaded = false;
 
         void HandleMenuClose();
 

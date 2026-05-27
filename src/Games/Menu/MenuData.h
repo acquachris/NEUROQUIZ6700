@@ -11,6 +11,7 @@
 // 1 ora dopo, tutto funziona! Dovevo lasciare un mio marchio musicale :)
 // ~ Christian
 namespace MenuData {
+    const inline int numberOfGames = 3;
     const inline int numberOfNotes = 244;
 
     // Your Lie in April!!!
