@@ -17,4 +17,5 @@ class Menu {
         void Init();
         void Tick();
         void Exit();
+        int GetCurrentMenuIndex();
 };

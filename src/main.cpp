@@ -187,16 +187,39 @@ void HandleGameStateChange() {
 }
 
 const GameState::GameState GetStateFromPosition(ThreePositionSwitch::Position position){
-    switch (position){
-        case ThreePositionSwitch::LEFT:
+    // 27/05/2026, visto che lo switch si è rotto si passa all'uso di pulsanti.
+    // Mi scuso per l'implementazione ignorante. Domani devo partire per Londra, non ho tempo ;-;
+
+    int currentMenuIndex = menuScreen.GetCurrentMenuIndex();
+   
+    // switch (position){
+    //     case ThreePositionSwitch::LEFT:
+    //         return GameState::KEYPAD_GAME;
+    //         break;
+
+    //     case ThreePositionSwitch::CENTER:
+    //         return GameState::QUESTION_GAME;
+    //         break;
+
+    //     case ThreePositionSwitch::RIGHT:
+    //         return GameState::RFID_GAME;
+    //         break;
+
+    //     default:
+    //         return GameState::QUESTION_GAME;
+    //         break;
+    // }
+
+    switch(currentMenuIndex){
+        case 0:
             return GameState::KEYPAD_GAME;
             break;
 
-        case ThreePositionSwitch::CENTER:
+        case 1:
             return GameState::QUESTION_GAME;
             break;
 
-        case ThreePositionSwitch::RIGHT:
+        case 2:
             return GameState::RFID_GAME;
             break;
 

@@ -204,3 +204,7 @@ void Menu::Tick(){
 
     hw.buzzer.Play(options);
 }
+
+int Menu::GetCurrentMenuIndex(){
+    return currentMenuIndex;
+}
